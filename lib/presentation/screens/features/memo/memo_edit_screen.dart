@@ -39,6 +39,21 @@ class _MemoEditScreenState extends ConsumerState<MemoEditScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant MemoEditScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 当 memoId 变化时，重新加载
+    if (oldWidget.memoId != widget.memoId) {
+      _titleController.clear();
+      _contentController.clear();
+      if (widget.memoId != null) {
+        ref.read(memoEditProvider.notifier).loadMemo(widget.memoId!);
+      } else {
+        ref.read(memoEditProvider.notifier).initNew();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
@@ -139,12 +154,20 @@ class _MemoEditScreenState extends ConsumerState<MemoEditScreen> {
     final editState = ref.watch(memoEditProvider);
     final isEditing = widget.memoId != null;
 
-    // 同步控制器内容
-    if (editState.title.isNotEmpty && _titleController.text.isEmpty) {
-      _titleController.text = editState.title;
-    }
-    if (editState.content.isNotEmpty && _contentController.text.isEmpty) {
-      _contentController.text = editState.content;
+    // 同步控制器内容（只在 id 匹配时）
+    if (editState.id == widget.memoId) {
+      if (_titleController.text != editState.title && editState.title.isNotEmpty) {
+        _titleController.text = editState.title;
+        _titleController.selection = TextSelection.fromPosition(
+          TextPosition(offset: editState.title.length),
+        );
+      }
+      if (_contentController.text != editState.content && editState.content.isNotEmpty) {
+        _contentController.text = editState.content;
+        _contentController.selection = TextSelection.fromPosition(
+          TextPosition(offset: editState.content.length),
+        );
+      }
     }
 
     return PopScope(
