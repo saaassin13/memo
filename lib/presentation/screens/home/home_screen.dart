@@ -1,0 +1,184 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '你好',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '今天记录点什么？',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.1,
+                ),
+                delegate: SliverChildListDelegate([
+                  _FeatureCard(
+                    icon: Icons.note_alt_rounded,
+                    title: '备忘录',
+                    subtitle: '记录灵感',
+                    gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
+                    onTap: () => context.go('/memo'),
+                  ),
+                  _FeatureCard(
+                    icon: Icons.book_rounded,
+                    title: '日记',
+                    subtitle: '每日记录',
+                    gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+                    onTap: () => context.go('/diary'),
+                  ),
+                  _FeatureCard(
+                    icon: Icons.favorite_rounded,
+                    title: '纪念日',
+                    subtitle: '重要日子',
+                    gradient: const [Color(0xFFF093FB), Color(0xFFF5576C)],
+                    onTap: () => context.go('/countdown'),
+                  ),
+                  _FeatureCard(
+                    icon: Icons.account_balance_wallet_rounded,
+                    title: '记账',
+                    subtitle: '收支明细',
+                    gradient: const [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                    onTap: () => context.go('/account'),
+                  ),
+                  _FeatureCard(
+                    icon: Icons.flag_rounded,
+                    title: '目标',
+                    subtitle: '进度追踪',
+                    gradient: const [Color(0xFFFF6B6B), Color(0xFFFFE66D)],
+                    onTap: () => context.go('/goal'),
+                  ),
+                  _FeatureCard(
+                    icon: Icons.monitor_weight_rounded,
+                    title: '体重',
+                    subtitle: '健康记录',
+                    gradient: const [Color(0xFFA8EB12), Color(0xFF36D1DC)],
+                    onTap: () => context.go('/weight'),
+                  ),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: gradient[0].withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
