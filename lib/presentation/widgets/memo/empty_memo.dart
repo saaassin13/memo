@@ -19,13 +19,13 @@ class EmptyMemo extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: colorScheme.primaryContainer.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.note_alt_outlined,
                 size: 56,
-                color: colorScheme.primary.withValues(alpha: 0.6),
+                color: colorScheme.primary.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 24),

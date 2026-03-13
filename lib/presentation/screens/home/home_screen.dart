@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF667EEA).withValues(alpha: 0.3),
+                                color: const Color(0xFF667EEA).withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -174,7 +174,7 @@ class _FeatureCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: gradient[0].withValues(alpha: 0.35),
+                color: gradient[0].withOpacity(0.35),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -188,7 +188,7 @@ class _FeatureCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: Colors.white.withOpacity(0.25),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -212,7 +212,7 @@ class _FeatureCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: Colors.white.withOpacity(0.85),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),

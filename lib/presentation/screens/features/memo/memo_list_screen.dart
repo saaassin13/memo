@@ -309,7 +309,7 @@ class _MemoListScreenState extends ConsumerState<MemoListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF667EEA).withValues(alpha: 0.4),
+              color: const Color(0xFF667EEA).withOpacity(0.4),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),

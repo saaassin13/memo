@@ -159,7 +159,7 @@ class MemoImagePicker extends StatelessWidget {
                       color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.3),
+                        color: colorScheme.outline.withOpacity(0.3),
                         style: BorderStyle.solid,
                       ),
                     ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/memo_providers.dart';
+import '../../providers/todo_providers.dart';
 
-class CategoryChips extends ConsumerWidget {
-  const CategoryChips({super.key});
+class TodoCategoryChips extends ConsumerWidget {
+  const TodoCategoryChips({super.key});
 
   static const _categoryColors = {
     '全部': Color(0xFF667EEA),
@@ -15,8 +15,7 @@ class CategoryChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedCategory = ref.watch(selectedCategoryProvider);
-    final categories = ref.watch(categoriesProvider);
+    final selectedCategory = ref.watch(selectedTodoCategoryProvider);
 
     return Container(
       height: 48,
@@ -24,23 +23,16 @@ class CategoryChips extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: categories.length + 1,
+        itemCount: todoCategories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          if (index == 0) {
-            return _CategoryChip(
-              label: '全部',
-              color: _categoryColors['全部']!,
-              isSelected: selectedCategory == null,
-              onTap: () => ref.read(selectedCategoryProvider.notifier).state = null,
-            );
-          }
-          final category = categories[index - 1];
+          final category = todoCategories[index];
           return _CategoryChip(
             label: category,
             color: _categoryColors[category] ?? _categoryColors['杂项']!,
             isSelected: selectedCategory == category,
-            onTap: () => ref.read(selectedCategoryProvider.notifier).state = category,
+            onTap: () =>
+                ref.read(selectedTodoCategoryProvider.notifier).state = category,
           );
         },
       ),

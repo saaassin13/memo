@@ -20,7 +20,7 @@ class MainScaffold extends StatelessWidget {
           color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.08),
+              color: colorScheme.shadow.withOpacity(0.08),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -69,10 +69,13 @@ class MainScaffold extends StatelessWidget {
   }
 
   void _onTap(int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
-    );
+    // 只有在不同 tab 时才切换，避免重新加载
+    if (index != navigationShell.currentIndex) {
+      navigationShell.goBranch(
+        index,
+        initialLocation: true,
+      );
+    }
   }
 }
 
@@ -105,7 +108,7 @@ class _NavItem extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: gradient.map((c) => c.withValues(alpha: 0.15)).toList(),
+                  colors: gradient.map((c) => c.withOpacity(0.15)).toList(),
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -115,9 +118,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutBack,
+            Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: isSelected
@@ -128,21 +129,30 @@ class _NavItem extends StatelessWidget {
                       )
                     : null,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: gradient[0].withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
               ),
-              child: Icon(
-                icon,
-                color: isSelected ? Colors.white : colorScheme.onSurfaceVariant,
-                size: 22,
-              ),
+              child: isSelected
+                  ? Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: gradient[0].withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        icon,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    )
+                  : Icon(
+                      icon,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 22,
+                    ),
             ),
             const SizedBox(height: 6),
             AnimatedDefaultTextStyle(

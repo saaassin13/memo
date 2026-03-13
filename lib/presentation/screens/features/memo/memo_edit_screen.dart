@@ -271,7 +271,7 @@ class _MemoEditScreenState extends ConsumerState<MemoEditScreen> {
                       color: colorScheme.surface,
                       border: Border(
                         top: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                          color: colorScheme.outlineVariant.withOpacity(0.5),
                         ),
                       ),
                     ),
@@ -429,7 +429,7 @@ class _CategoryChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
@@ -468,7 +468,7 @@ class _ActionButton extends StatelessWidget {
     final activeColor = const Color(0xFF667EEA);
 
     return Material(
-      color: isActive ? activeColor.withValues(alpha: 0.1) : colorScheme.surfaceContainerHighest,
+      color: isActive ? activeColor.withOpacity(0.1) : colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
