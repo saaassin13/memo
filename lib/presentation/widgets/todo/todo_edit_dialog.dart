@@ -6,8 +6,9 @@ import '../../providers/repository_providers.dart';
 
 class TodoEditDialog extends ConsumerStatefulWidget {
   final Todo? todo;
+  final String? initialCategory;
 
-  const TodoEditDialog({super.key, this.todo});
+  const TodoEditDialog({super.key, this.todo, this.initialCategory});
 
   @override
   ConsumerState<TodoEditDialog> createState() => _TodoEditDialogState();
@@ -30,7 +31,8 @@ class _TodoEditDialogState extends ConsumerState<TodoEditDialog> {
     _titleController = TextEditingController(text: widget.todo?.title ?? '');
     _descriptionController =
         TextEditingController(text: widget.todo?.description ?? '');
-    _category = widget.todo?.category ?? '杂项';
+    // 编辑时使用待办原有的分类，新建时使用传入的分类
+    _category = widget.todo?.category ?? widget.initialCategory ?? '杂项';
     _dueDate = widget.todo?.dueDate;
   }
 
@@ -335,9 +337,9 @@ class _TodoEditDialogState extends ConsumerState<TodoEditDialog> {
 }
 
 // 显示编辑弹窗的辅助函数
-Future<bool?> showTodoEditDialog(BuildContext context, {Todo? todo}) {
+Future<bool?> showTodoEditDialog(BuildContext context, {Todo? todo, String? initialCategory}) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => TodoEditDialog(todo: todo),
+    builder: (context) => TodoEditDialog(todo: todo, initialCategory: initialCategory),
   );
 }

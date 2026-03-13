@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/todo_providers.dart';
 
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainScaffold({
@@ -10,8 +12,9 @@ class MainScaffold extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final pendingCount = ref.watch(pendingTodosProvider).length;
 
     return Scaffold(
       body: navigationShell,
@@ -45,6 +48,7 @@ class MainScaffold extends StatelessWidget {
                   isSelected: navigationShell.currentIndex == 1,
                   onTap: () => _onTap(1),
                   gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+                  badgeCount: pendingCount > 0 ? pendingCount : null,
                 ),
                 _NavItem(
                   icon: Icons.calendar_month_rounded,
@@ -85,6 +89,7 @@ class _NavItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final List<Color> gradient;
+  final int? badgeCount;
 
   const _NavItem({
     required this.icon,
@@ -92,6 +97,7 @@ class _NavItem extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.gradient,
+    this.badgeCount,
   });
 
   @override
@@ -118,41 +124,69 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: isSelected
-                    ? LinearGradient(
-                        colors: gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: isSelected
-                  ? Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: gradient[0].withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            colors: gradient,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: isSelected
+                      ? Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: gradient[0].withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
+                          child: Icon(
+                            icon,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        )
+                      : Icon(
+                          icon,
+                          color: colorScheme.onSurfaceVariant,
+                          size: 22,
+                        ),
+                ),
+                // 徽章
+                if (badgeCount != null && badgeCount! > 0)
+                  Positioned(
+                    right: -6,
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        icon,
-                        color: Colors.white,
-                        size: 22,
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      child: Text(
+                        badgeCount! > 99 ? '99+' : badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    )
-                  : Icon(
-                      icon,
-                      color: colorScheme.onSurfaceVariant,
-                      size: 22,
                     ),
+                  ),
+              ],
             ),
             const SizedBox(height: 6),
             AnimatedDefaultTextStyle(

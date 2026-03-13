@@ -207,7 +207,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   void _addTodo() {
     final category = ref.read(selectedTodoCategoryProvider);
     if (category != null && category != '全部') {
-      showTodoEditDialog(context);
+      showTodoEditDialog(context, initialCategory: category);
     } else {
       showTodoEditDialog(context);
     }
