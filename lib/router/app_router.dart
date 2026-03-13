@@ -35,7 +35,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/memo/edit',
-                builder: (context, state) => const MemoEditScreen(),
+                builder: (context, state) {
+                  final idStr = state.uri.queryParameters['id'];
+                  final category = state.uri.queryParameters['category'];
+                  final id = idStr != null ? int.tryParse(idStr) : null;
+                  return MemoEditScreen(memoId: id, initialCategory: category);
+                },
               ),
               GoRoute(
                 path: '/diary',

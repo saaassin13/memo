@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/memo_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -8,6 +9,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final memosAsync = ref.watch(memosProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -50,9 +52,14 @@ class HomeScreen extends ConsumerWidget {
                   _FeatureCard(
                     icon: Icons.note_alt_rounded,
                     title: '备忘录',
-                    subtitle: '记录灵感',
+                    subtitle: memosAsync.when(
+                      data: (memos) => '${memos.length} 条记录',
+                      loading: () => '加载中...',
+                      error: (_, __) => '加载失败',
+                    ),
                     gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
                     onTap: () => context.go('/memo'),
+                    onLongPress: () => context.push('/memo/edit?category=工作'),
                   ),
                   _FeatureCard(
                     icon: Icons.book_rounded,
@@ -105,6 +112,7 @@ class _FeatureCard extends StatelessWidget {
   final String subtitle;
   final List<Color> gradient;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _FeatureCard({
     required this.icon,
@@ -112,6 +120,7 @@ class _FeatureCard extends StatelessWidget {
     required this.subtitle,
     required this.gradient,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -120,6 +129,7 @@ class _FeatureCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
