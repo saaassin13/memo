@@ -78,6 +78,15 @@ class $MemosTable extends Memos with TableInfo<$MemosTable, Memo> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imagesMeta = const VerificationMeta('images');
+  @override
+  late final GeneratedColumn<String> images = GeneratedColumn<String>(
+    'images',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -110,6 +119,7 @@ class $MemosTable extends Memos with TableInfo<$MemosTable, Memo> {
     category,
     isPinned,
     remindTime,
+    images,
     createdAt,
     updatedAt,
   ];
@@ -162,6 +172,12 @@ class $MemosTable extends Memos with TableInfo<$MemosTable, Memo> {
         remindTime.isAcceptableOrUnknown(data['remind_time']!, _remindTimeMeta),
       );
     }
+    if (data.containsKey('images')) {
+      context.handle(
+        _imagesMeta,
+        images.isAcceptableOrUnknown(data['images']!, _imagesMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -207,6 +223,10 @@ class $MemosTable extends Memos with TableInfo<$MemosTable, Memo> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}remind_time'],
       ),
+      images: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}images'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -231,6 +251,7 @@ class Memo extends DataClass implements Insertable<Memo> {
   final String? category;
   final bool isPinned;
   final DateTime? remindTime;
+  final String? images;
   final DateTime createdAt;
   final DateTime updatedAt;
   const Memo({
@@ -240,6 +261,7 @@ class Memo extends DataClass implements Insertable<Memo> {
     this.category,
     required this.isPinned,
     this.remindTime,
+    this.images,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -255,6 +277,9 @@ class Memo extends DataClass implements Insertable<Memo> {
     map['is_pinned'] = Variable<bool>(isPinned);
     if (!nullToAbsent || remindTime != null) {
       map['remind_time'] = Variable<DateTime>(remindTime);
+    }
+    if (!nullToAbsent || images != null) {
+      map['images'] = Variable<String>(images);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -273,6 +298,9 @@ class Memo extends DataClass implements Insertable<Memo> {
       remindTime: remindTime == null && nullToAbsent
           ? const Value.absent()
           : Value(remindTime),
+      images: images == null && nullToAbsent
+          ? const Value.absent()
+          : Value(images),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -290,6 +318,7 @@ class Memo extends DataClass implements Insertable<Memo> {
       category: serializer.fromJson<String?>(json['category']),
       isPinned: serializer.fromJson<bool>(json['isPinned']),
       remindTime: serializer.fromJson<DateTime?>(json['remindTime']),
+      images: serializer.fromJson<String?>(json['images']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -304,6 +333,7 @@ class Memo extends DataClass implements Insertable<Memo> {
       'category': serializer.toJson<String?>(category),
       'isPinned': serializer.toJson<bool>(isPinned),
       'remindTime': serializer.toJson<DateTime?>(remindTime),
+      'images': serializer.toJson<String?>(images),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -316,6 +346,7 @@ class Memo extends DataClass implements Insertable<Memo> {
     Value<String?> category = const Value.absent(),
     bool? isPinned,
     Value<DateTime?> remindTime = const Value.absent(),
+    Value<String?> images = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => Memo(
@@ -325,6 +356,7 @@ class Memo extends DataClass implements Insertable<Memo> {
     category: category.present ? category.value : this.category,
     isPinned: isPinned ?? this.isPinned,
     remindTime: remindTime.present ? remindTime.value : this.remindTime,
+    images: images.present ? images.value : this.images,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -338,6 +370,7 @@ class Memo extends DataClass implements Insertable<Memo> {
       remindTime: data.remindTime.present
           ? data.remindTime.value
           : this.remindTime,
+      images: data.images.present ? data.images.value : this.images,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -352,6 +385,7 @@ class Memo extends DataClass implements Insertable<Memo> {
           ..write('category: $category, ')
           ..write('isPinned: $isPinned, ')
           ..write('remindTime: $remindTime, ')
+          ..write('images: $images, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -366,6 +400,7 @@ class Memo extends DataClass implements Insertable<Memo> {
     category,
     isPinned,
     remindTime,
+    images,
     createdAt,
     updatedAt,
   );
@@ -379,6 +414,7 @@ class Memo extends DataClass implements Insertable<Memo> {
           other.category == this.category &&
           other.isPinned == this.isPinned &&
           other.remindTime == this.remindTime &&
+          other.images == this.images &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -390,6 +426,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
   final Value<String?> category;
   final Value<bool> isPinned;
   final Value<DateTime?> remindTime;
+  final Value<String?> images;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const MemosCompanion({
@@ -399,6 +436,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
     this.category = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.remindTime = const Value.absent(),
+    this.images = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -409,6 +447,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
     this.category = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.remindTime = const Value.absent(),
+    this.images = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   }) : title = Value(title),
@@ -420,6 +459,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
     Expression<String>? category,
     Expression<bool>? isPinned,
     Expression<DateTime>? remindTime,
+    Expression<String>? images,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -430,6 +470,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
       if (category != null) 'category': category,
       if (isPinned != null) 'is_pinned': isPinned,
       if (remindTime != null) 'remind_time': remindTime,
+      if (images != null) 'images': images,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -442,6 +483,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
     Value<String?>? category,
     Value<bool>? isPinned,
     Value<DateTime?>? remindTime,
+    Value<String?>? images,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -452,6 +494,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
       category: category ?? this.category,
       isPinned: isPinned ?? this.isPinned,
       remindTime: remindTime ?? this.remindTime,
+      images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -478,6 +521,9 @@ class MemosCompanion extends UpdateCompanion<Memo> {
     if (remindTime.present) {
       map['remind_time'] = Variable<DateTime>(remindTime.value);
     }
+    if (images.present) {
+      map['images'] = Variable<String>(images.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -496,6 +542,7 @@ class MemosCompanion extends UpdateCompanion<Memo> {
           ..write('category: $category, ')
           ..write('isPinned: $isPinned, ')
           ..write('remindTime: $remindTime, ')
+          ..write('images: $images, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3058,6 +3105,7 @@ typedef $$MemosTableCreateCompanionBuilder =
       Value<String?> category,
       Value<bool> isPinned,
       Value<DateTime?> remindTime,
+      Value<String?> images,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -3069,6 +3117,7 @@ typedef $$MemosTableUpdateCompanionBuilder =
       Value<String?> category,
       Value<bool> isPinned,
       Value<DateTime?> remindTime,
+      Value<String?> images,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -3108,6 +3157,11 @@ class $$MemosTableFilterComposer extends Composer<_$AppDatabase, $MemosTable> {
 
   ColumnFilters<DateTime> get remindTime => $composableBuilder(
     column: $table.remindTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get images => $composableBuilder(
+    column: $table.images,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3161,6 +3215,11 @@ class $$MemosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get images => $composableBuilder(
+    column: $table.images,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3200,6 +3259,9 @@ class $$MemosTableAnnotationComposer
     column: $table.remindTime,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get images =>
+      $composableBuilder(column: $table.images, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3242,6 +3304,7 @@ class $$MemosTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<DateTime?> remindTime = const Value.absent(),
+                Value<String?> images = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => MemosCompanion(
@@ -3251,6 +3314,7 @@ class $$MemosTableTableManager
                 category: category,
                 isPinned: isPinned,
                 remindTime: remindTime,
+                images: images,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -3262,6 +3326,7 @@ class $$MemosTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<DateTime?> remindTime = const Value.absent(),
+                Value<String?> images = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => MemosCompanion.insert(
@@ -3271,6 +3336,7 @@ class $$MemosTableTableManager
                 category: category,
                 isPinned: isPinned,
                 remindTime: remindTime,
+                images: images,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

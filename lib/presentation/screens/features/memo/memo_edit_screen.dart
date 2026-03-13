@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/memo_edit_provider.dart';
+import '../../../widgets/memo/memo_image_picker.dart';
 
 class MemoEditScreen extends ConsumerStatefulWidget {
   final int? memoId;
@@ -247,6 +248,18 @@ class _MemoEditScreenState extends ConsumerState<MemoEditScreen> {
                             keyboardType: TextInputType.multiline,
                             textInputAction: TextInputAction.newline,
                             onChanged: (_) => _onChanged(),
+                          ),
+                          // 图片选择器
+                          MemoImagePicker(
+                            images: editState.images,
+                            onAdd: (path) {
+                              ref.read(memoEditProvider.notifier).addImage(path);
+                              _onChanged();
+                            },
+                            onRemove: (index) {
+                              ref.read(memoEditProvider.notifier).removeImage(index);
+                              _onChanged();
+                            },
                           ),
                         ],
                       ),

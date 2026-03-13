@@ -20,15 +20,15 @@ class MainScaffold extends StatelessWidget {
           color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.1),
+              color: colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 20,
-              offset: const Offset(0, -5),
+              offset: const Offset(0, -4),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -37,28 +37,28 @@ class MainScaffold extends StatelessWidget {
                   label: '首页',
                   isSelected: navigationShell.currentIndex == 0,
                   onTap: () => _onTap(0),
-                  color: colorScheme.primary,
+                  gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
                 ),
                 _NavItem(
                   icon: Icons.check_circle_rounded,
                   label: '待办',
                   isSelected: navigationShell.currentIndex == 1,
                   onTap: () => _onTap(1),
-                  color: colorScheme.primary,
+                  gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
                 ),
                 _NavItem(
                   icon: Icons.calendar_month_rounded,
                   label: '日历',
                   isSelected: navigationShell.currentIndex == 2,
                   onTap: () => _onTap(2),
-                  color: colorScheme.primary,
+                  gradient: const [Color(0xFFF093FB), Color(0xFFF5576C)],
                 ),
                 _NavItem(
                   icon: Icons.person_rounded,
                   label: '我的',
                   isSelected: navigationShell.currentIndex == 3,
                   onTap: () => _onTap(3),
-                  color: colorScheme.primary,
+                  gradient: const [Color(0xFF4FACFE), Color(0xFF00F2FE)],
                 ),
               ],
             ),
@@ -81,14 +81,14 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final Color color;
+  final List<Color> gradient;
 
   const _NavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
-    required this.color,
+    required this.gradient,
   });
 
   @override
@@ -99,32 +99,60 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: gradient.map((c) => c.withValues(alpha: 0.15)).toList(),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 200),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: gradient,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: gradient[0].withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
               child: Icon(
                 icon,
-                color: isSelected ? color : colorScheme.onSurfaceVariant,
-                size: 26,
+                color: isSelected ? Colors.white : colorScheme.onSurfaceVariant,
+                size: 22,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
+            const SizedBox(height: 6),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? color : colorScheme.onSurfaceVariant,
+                color: isSelected ? gradient[0] : colorScheme.onSurfaceVariant,
               ),
+              child: Text(label),
             ),
           ],
         ),

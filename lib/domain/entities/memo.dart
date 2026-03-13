@@ -5,6 +5,7 @@ class Memo {
   final String? category;
   final bool isPinned;
   final DateTime? remindTime;
+  final List<String> images;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,6 +16,7 @@ class Memo {
     this.category,
     this.isPinned = false,
     this.remindTime,
+    this.images = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -26,6 +28,7 @@ class Memo {
     String? category,
     bool? isPinned,
     DateTime? remindTime,
+    List<String>? images,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -36,6 +39,7 @@ class Memo {
       category: category ?? this.category,
       isPinned: isPinned ?? this.isPinned,
       remindTime: remindTime ?? this.remindTime,
+      images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

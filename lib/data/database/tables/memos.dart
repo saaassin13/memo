@@ -7,6 +7,7 @@ class Memos extends Table {
   TextColumn get category => text().nullable()();
   BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
   DateTimeColumn get remindTime => dateTime().nullable()();
+  TextColumn get images => text().nullable()(); // JSON 数组字符串，可为空
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }

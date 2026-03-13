@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../domain/entities/memo.dart';
@@ -80,16 +81,76 @@ class MemoCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            // 摘要
+            // 摘要和图片
             Expanded(
-              child: Text(
-                memo.content,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 摘要
+                  Expanded(
+                    child: Text(
+                      memo.content,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // 图片缩略图
+                  if (memo.images.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      height: 36,
+                      child: Row(
+                        children: [
+                          // 显示第一张图片
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.file(
+                              File(memo.images.first),
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 36,
+                                height: 36,
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.image,
+                                  size: 16,
+                                  color: colorScheme.outline,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (memo.images.length > 1) ...[
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '+${memo.images.length}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 8),

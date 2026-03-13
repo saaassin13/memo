@@ -29,7 +29,17 @@
 - [x] 实现 CRUD 操作
 - [x] 实现返回确认弹窗
 
-### Step 5.5: 实现动画和细节
+### Step 5.5: 实现图片功能
+- [x] 添加 image_picker 和 uuid 依赖
+- [x] 更新数据库表添加 images 字段
+- [x] 更新 Memo 实体添加 images 字段
+- [x] 更新 Repository 处理 images JSON 序列化
+- [x] 更新 MemoEditProvider 添加图片管理方法
+- [x] 创建 MemoImagePicker 组件 (相册/拍照选择)
+- [x] 集成图片选择器到编辑页面
+- [x] 卡片显示图片缩略图
+
+### Step 5.6: 实现动画和细节
 - [x] 页面切换动画
 - [x] 卡片点击动画
 - [x] 下拉刷新
@@ -61,6 +71,7 @@
 | 文件 | 说明 | 状态 |
 |------|------|------|
 | `screens/features/memo/memo_edit_screen.dart` | 新建/编辑页 | ✅ |
+| `widgets/memo/memo_image_picker.dart` | 图片选择器 | ✅ |
 | `widgets/memo/memo_title_field.dart` | 标题输入框 (集成在页面内) | ✅ |
 | `widgets/memo/memo_content_field.dart` | 内容输入框 (集成在页面内) | ✅ |
 | `widgets/memo/memo_category_select.dart` | 分类选择 (集成在页面内) | ✅ |
@@ -77,6 +88,9 @@
 | 删除 | 删除备忘录 | ✅ |
 | 置顶 | 切换置顶状态 | ✅ |
 | 返回确认 | 未保存时弹窗 | ✅ |
+| 图片选择 | 从相册/相机选择图片 | ✅ |
+| 图片预览 | 全屏查看图片 | ✅ |
+| 图片删除 | 删除已添加的图片 | ✅ |
 
 ---
 
@@ -93,6 +107,7 @@
 - [x] CRUD 操作
 - [x] 返回确认弹窗
 - [x] 下拉刷新
+- [x] 图片功能 (选择/预览/删除)
 
 ### 待完成
 - [ ] 测试和优化

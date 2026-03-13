@@ -10,6 +10,7 @@ class MemoEditState {
   final String? category;
   final bool isPinned;
   final DateTime? remindTime;
+  final List<String> images;
   final bool isLoading;
   final String? error;
 
@@ -20,12 +21,13 @@ class MemoEditState {
     this.category,
     this.isPinned = false,
     this.remindTime,
+    this.images = const [],
     this.isLoading = false,
     this.error,
   });
 
   bool get isEditing => id != null;
-  bool get hasChanges => title.isNotEmpty || content.isNotEmpty || category != null || isPinned || remindTime != null;
+  bool get hasChanges => title.isNotEmpty || content.isNotEmpty || category != null || isPinned || remindTime != null || images.isNotEmpty;
 
   MemoEditState copyWith({
     int? id,
@@ -34,6 +36,7 @@ class MemoEditState {
     String? category,
     bool? isPinned,
     DateTime? remindTime,
+    List<String>? images,
     bool? isLoading,
     String? error,
     bool clearCategory = false,
@@ -46,6 +49,7 @@ class MemoEditState {
       category: clearCategory ? null : (category ?? this.category),
       isPinned: isPinned ?? this.isPinned,
       remindTime: clearRemindTime ? null : (remindTime ?? this.remindTime),
+      images: images ?? this.images,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -74,6 +78,7 @@ class MemoEditNotifier extends StateNotifier<MemoEditState> {
           category: memo.category,
           isPinned: memo.isPinned,
           remindTime: memo.remindTime,
+          images: memo.images,
         );
       }
     } catch (e) {
@@ -125,6 +130,20 @@ class MemoEditNotifier extends StateNotifier<MemoEditState> {
     }
   }
 
+  void addImage(String imagePath) {
+    if (state.images.length < 9) {
+      state = state.copyWith(images: [...state.images, imagePath]);
+    }
+  }
+
+  void removeImage(int index) {
+    final newImages = List<String>.from(state.images);
+    if (index >= 0 && index < newImages.length) {
+      newImages.removeAt(index);
+      state = state.copyWith(images: newImages);
+    }
+  }
+
   Future<bool> save() async {
     if (state.title.trim().isEmpty) {
       state = state.copyWith(error: '标题不能为空');
@@ -145,7 +164,8 @@ class MemoEditNotifier extends StateNotifier<MemoEditState> {
           category: state.category,
           isPinned: state.isPinned,
           remindTime: state.remindTime,
-          createdAt: now, // 会被忽略
+          images: state.images,
+          createdAt: now,
           updatedAt: now,
         );
         await repository.update(memo);
@@ -156,6 +176,7 @@ class MemoEditNotifier extends StateNotifier<MemoEditState> {
           category: state.category,
           isPinned: state.isPinned,
           remindTime: state.remindTime,
+          images: state.images,
           createdAt: now,
           updatedAt: now,
         );

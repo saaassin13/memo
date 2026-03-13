@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import '../../domain/entities/memo.dart' as entity;
 import '../../domain/repositories/memo_repository.dart';
@@ -35,6 +36,7 @@ class MemoRepositoryImpl implements MemoRepository {
           category: Value(memo.category),
           isPinned: Value(memo.isPinned),
           remindTime: Value(memo.remindTime),
+          images: Value(memo.images.isNotEmpty ? jsonEncode(memo.images) : null),
         ));
   }
 
@@ -47,6 +49,7 @@ class MemoRepositoryImpl implements MemoRepository {
           category: Value(memo.category),
           isPinned: Value(memo.isPinned),
           remindTime: Value(memo.remindTime),
+          images: Value(memo.images.isNotEmpty ? jsonEncode(memo.images) : null),
           updatedAt: Value(DateTime.now()),
         ));
   }
@@ -57,6 +60,13 @@ class MemoRepositoryImpl implements MemoRepository {
   }
 
   entity.Memo _mapToEntity(Memo row) {
+    List<String> images = [];
+    final imagesStr = row.images;
+    if (imagesStr != null && imagesStr.isNotEmpty) {
+      try {
+        images = List<String>.from(jsonDecode(imagesStr));
+      } catch (_) {}
+    }
     return entity.Memo(
       id: row.id,
       title: row.title,
@@ -64,6 +74,7 @@ class MemoRepositoryImpl implements MemoRepository {
       category: row.category,
       isPinned: row.isPinned,
       remindTime: row.remindTime,
+      images: images,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
