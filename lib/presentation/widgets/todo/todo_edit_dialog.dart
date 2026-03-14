@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/entities/todo.dart';
 import '../../providers/todo_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../common/date_time_picker.dart';
 
 class TodoEditDialog extends ConsumerStatefulWidget {
   final Todo? todo;
@@ -58,54 +59,16 @@ class _TodoEditDialogState extends ConsumerState<TodoEditDialog> {
   }
 
   Future<void> _selectDueDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _dueDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: const Color(0xFF667EEA),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black87,
-            ),
-          ),
-          child: child!,
-        );
-      },
+    final result = await DateTimePickerHelper.show(
+      context,
+      initialDateTime: _dueDate,
+      minimumDate: DateTime.now().subtract(const Duration(days: 365)),
+      maximumDate: DateTime.now().add(const Duration(days: 365 * 5)),
     );
-    if (date != null && mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: const Color(0xFF667EEA),
-                onPrimary: Colors.white,
-                surface: Colors.white,
-                onSurface: Colors.black87,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
-      if (time != null && mounted) {
-        setState(() {
-          _dueDate = DateTime(
-            date.year,
-            date.month,
-            date.day,
-            time.hour,
-            time.minute,
-          );
-        });
-      }
+    if (result != null && mounted) {
+      setState(() {
+        _dueDate = result;
+      });
     }
   }
 

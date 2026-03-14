@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/memo_edit_provider.dart';
 import '../../../widgets/memo/memo_image_picker.dart';
+import '../../../widgets/common/date_time_picker.dart';
 
 class MemoEditScreen extends ConsumerStatefulWidget {
   final int? memoId;
@@ -406,27 +407,15 @@ class _MemoEditScreenState extends ConsumerState<MemoEditScreen> {
   }
 
   Future<void> _selectRemindTime(DateTime? current) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: current ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    final result = await DateTimePickerHelper.show(
+      context,
+      initialDateTime: current,
+      minimumDate: DateTime.now(),
+      maximumDate: DateTime.now().add(const Duration(days: 365 * 5)),
     );
-    if (date != null && mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(current ?? DateTime.now()),
-      );
-      if (time != null) {
-        ref.read(memoEditProvider.notifier).setRemindTime(DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        ));
-        _onChanged();
-      }
+    if (result != null) {
+      ref.read(memoEditProvider.notifier).setRemindTime(result);
+      _onChanged();
     }
   }
 }
