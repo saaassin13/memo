@@ -6,6 +6,7 @@ class TodoListTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+  final VoidCallback? onDelete;
 
   const TodoListTile({
     super.key,
@@ -13,6 +14,7 @@ class TodoListTile extends StatelessWidget {
     required this.onToggle,
     required this.onTap,
     required this.onLongPress,
+    this.onDelete,
   });
 
   static const _categoryColors = {
@@ -140,7 +142,11 @@ class TodoListTile extends StatelessWidget {
             return await _confirmDelete(context);
           }
         },
-        onDismissed: (direction) {},
+        onDismissed: (direction) {
+          if (direction == DismissDirection.endToStart && onDelete != null) {
+            onDelete!();
+          }
+        },
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,

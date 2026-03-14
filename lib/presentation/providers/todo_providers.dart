@@ -77,17 +77,17 @@ final filteredTodosProvider = Provider<AsyncValue<List<Todo>>>((ref) {
 // 待办列表（未完成）
 final pendingTodosProvider = Provider<List<Todo>>((ref) {
   final todosAsync = ref.watch(todosProvider);
-  return todosAsync.whenOrNull(
-        data: (todos) => todos.where((t) => !t.isCompleted).toList(),
-      ) ??
-      const [];
+  return todosAsync.maybeWhen(
+    data: (todos) => todos.where((t) => !t.isCompleted).toList(),
+    orElse: () => const [],
+  );
 });
 
 // 已办列表（已完成）
 final completedTodosProvider = Provider<List<Todo>>((ref) {
   final todosAsync = ref.watch(todosProvider);
-  return todosAsync.whenOrNull(
-        data: (todos) => todos.where((t) => t.isCompleted).toList(),
-      ) ??
-      const [];
+  return todosAsync.maybeWhen(
+    data: (todos) => todos.where((t) => t.isCompleted).toList(),
+    orElse: () => const [],
+  );
 });

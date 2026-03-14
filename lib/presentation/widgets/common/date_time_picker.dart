@@ -41,14 +41,7 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
   late DateTime _selectedDate;
   late int _selectedHour;
   late int _selectedMinute;
-  late PageController _yearPageController;
-  late PageController _monthPageController;
-  late PageController _dayPageController;
-  late PageController _hourPageController;
-  late PageController _minutePageController;
-
-  final int _startYear = 2020;
-  final int _endYear = 2035;
+  late DateTime _currentMonth;
 
   @override
   void initState() {
@@ -56,51 +49,38 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
     _selectedDate = widget.initialDateTime;
     _selectedHour = widget.initialDateTime.hour;
     _selectedMinute = widget.initialDateTime.minute;
-
-    _yearPageController = PageController(
-      initialPage: widget.initialDateTime.year - _startYear,
-    );
-    _monthPageController = PageController(
-      initialPage: widget.initialDateTime.month - 1,
-    );
-    _dayPageController = PageController(
-      initialPage: widget.initialDateTime.day - 1,
-    );
-    _hourPageController = PageController(
-      initialPage: _selectedHour,
-    );
-    _minutePageController = PageController(
-      initialPage: _selectedMinute,
-    );
+    _currentMonth = DateTime(widget.initialDateTime.year, widget.initialDateTime.month);
   }
 
-  @override
-  void dispose() {
-    _yearPageController.dispose();
-    _monthPageController.dispose();
-    _dayPageController.dispose();
-    _hourPageController.dispose();
-    _minutePageController.dispose();
-    super.dispose();
+  int _getDaysInMonth(DateTime date) {
+    return DateTime(date.year, date.month + 1, 0).day;
   }
 
-  int _getDaysInMonth(int year, int month) {
-    return DateTime(year, month + 1, 0).day;
+  int _getFirstWeekdayOfMonth(DateTime date) {
+    return DateTime(date.year, date.month, 1).weekday % 7;
+  }
+
+  bool _isDateSelectable(DateTime date) {
+    if (widget.minimumDate != null && date.isBefore(widget.minimumDate!)) {
+      return false;
+    }
+    if (widget.maximumDate != null && date.isAfter(widget.maximumDate!)) {
+      return false;
+    }
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    final daysInMonth = _getDaysInMonth(_selectedDate.year, _selectedDate.month);
-
     return Container(
-      height: MediaQuery.of(context).size.height * 0.55,
+      height: MediaQuery.of(context).size.height * 0.65,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
-          // 顶部拖动条和标题
+          // 顶部操作栏
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
             child: Row(
@@ -190,14 +170,8 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
                     final now = DateTime.now();
                     setState(() {
                       _selectedDate = now;
-                      _selectedHour = now.hour;
-                      _selectedMinute = now.minute;
+                      _currentMonth = DateTime(now.year, now.month);
                     });
-                    _yearPageController.jumpToPage(now.year - _startYear);
-                    _monthPageController.jumpToPage(now.month - 1);
-                    _dayPageController.jumpToPage(now.day - 1);
-                    _hourPageController.jumpToPage(now.hour);
-                    _minutePageController.jumpToPage(now.minute);
                   },
                 ),
                 const SizedBox(width: 8),
@@ -207,14 +181,8 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
                     final tomorrow = DateTime.now().add(const Duration(days: 1));
                     setState(() {
                       _selectedDate = tomorrow;
-                      _selectedHour = 9;
-                      _selectedMinute = 0;
+                      _currentMonth = DateTime(tomorrow.year, tomorrow.month);
                     });
-                    _yearPageController.jumpToPage(tomorrow.year - _startYear);
-                    _monthPageController.jumpToPage(tomorrow.month - 1);
-                    _dayPageController.jumpToPage(tomorrow.day - 1);
-                    _hourPageController.jumpToPage(9);
-                    _minutePageController.jumpToPage(0);
                   },
                 ),
                 const SizedBox(width: 8),
@@ -224,14 +192,8 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
                     final weekLater = DateTime.now().add(const Duration(days: 7));
                     setState(() {
                       _selectedDate = weekLater;
-                      _selectedHour = 9;
-                      _selectedMinute = 0;
+                      _currentMonth = DateTime(weekLater.year, weekLater.month);
                     });
-                    _yearPageController.jumpToPage(weekLater.year - _startYear);
-                    _monthPageController.jumpToPage(weekLater.month - 1);
-                    _dayPageController.jumpToPage(weekLater.day - 1);
-                    _hourPageController.jumpToPage(9);
-                    _minutePageController.jumpToPage(0);
                   },
                 ),
               ],
@@ -240,99 +202,220 @@ class _DateTimePickerSheetState extends State<_DateTimePickerSheet> {
 
           const SizedBox(height: 16),
 
-          // 日期选择器
-          Expanded(
+          // 月份导航
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 年
-                Expanded(
-                  child: _PickerColumn(
-                    controller: _yearPageController,
-                    itemCount: _endYear - _startYear + 1,
-                    labelBuilder: (index) => '${_startYear + index}年',
-                    onChanged: (index) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _startYear + index,
-                          _selectedDate.month,
-                          _selectedDate.day,
-                        );
-                      });
-                    },
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                    });
+                  },
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.chevron_left_rounded, color: Colors.grey.shade700, size: 20),
                   ),
                 ),
-                // 月
-                Expanded(
-                  child: _PickerColumn(
-                    controller: _monthPageController,
-                    itemCount: 12,
-                    labelBuilder: (index) => '${index + 1}月',
-                    onChanged: (index) {
-                      final newMonth = index + 1;
-                      final maxDay = _getDaysInMonth(_selectedDate.year, newMonth);
-                      final newDay = _selectedDate.day > maxDay ? maxDay : _selectedDate.day;
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _selectedDate.year,
-                          newMonth,
-                          newDay,
-                        );
-                      });
-                    },
+                Text(
+                  '${_currentMonth.year}年${_currentMonth.month}月',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                // 日
-                Expanded(
-                  child: _PickerColumn(
-                    controller: _dayPageController,
-                    itemCount: daysInMonth,
-                    labelBuilder: (index) => '${index + 1}日',
-                    onChanged: (index) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _selectedDate.year,
-                          _selectedDate.month,
-                          index + 1,
-                        );
-                      });
-                    },
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 120,
-                  color: Colors.grey.shade200,
-                ),
-                // 时
-                Expanded(
-                  child: _PickerColumn(
-                    controller: _hourPageController,
-                    itemCount: 24,
-                    labelBuilder: (index) => '${index.toString().padLeft(2, '0')}时',
-                    onChanged: (index) {
-                      setState(() => _selectedHour = index);
-                    },
-                  ),
-                ),
-                // 分
-                Expanded(
-                  child: _PickerColumn(
-                    controller: _minutePageController,
-                    itemCount: 60,
-                    labelBuilder: (index) => '${index.toString().padLeft(2, '0')}分',
-                    onChanged: (index) {
-                      setState(() => _selectedMinute = index);
-                    },
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                    });
+                  },
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.chevron_right_rounded, color: Colors.grey.shade700, size: 20),
                   ),
                 ),
               ],
             ),
           ),
 
-          // 底部安全区
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+          const SizedBox(height: 8),
+
+          // 周标题
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: ['日', '一', '二', '三', '四', '五', '六']
+                  .map((day) => Expanded(
+                        child: Center(
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // 日历网格
+          Expanded(
+            child: _buildCalendarGrid(),
+          ),
+
+          // 时间选择
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF667EEA)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '选择时间',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 小时
+                    _TimePicker(
+                      value: _selectedHour,
+                      maxValue: 23,
+                      label: '时',
+                      onChanged: (v) => setState(() => _selectedHour = v),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        ':',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                    // 分钟
+                    _TimePicker(
+                      value: _selectedMinute,
+                      maxValue: 59,
+                      label: '分',
+                      onChanged: (v) => setState(() => _selectedMinute = v),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
+    );
+  }
+
+  Widget _buildCalendarGrid() {
+    final daysInMonth = _getDaysInMonth(_currentMonth);
+    final firstWeekday = _getFirstWeekdayOfMonth(_currentMonth);
+    final today = DateTime.now();
+
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        childAspectRatio: 1,
+      ),
+      itemCount: daysInMonth + firstWeekday,
+      itemBuilder: (context, index) {
+        if (index < firstWeekday) {
+          return const SizedBox();
+        }
+
+        final day = index - firstWeekday + 1;
+        final date = DateTime(_currentMonth.year, _currentMonth.month, day);
+        final isToday = date.year == today.year &&
+            date.month == today.month &&
+            date.day == today.day;
+        final isSelected = date.year == _selectedDate.year &&
+            date.month == _selectedDate.month &&
+            date.day == _selectedDate.day;
+        final isSelectable = _isDateSelectable(date);
+        final isCurrentMonth = _currentMonth.month == date.month;
+
+        return GestureDetector(
+          onTap: isSelectable
+              ? () {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                }
+              : null,
+          child: Container(
+            margin: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              gradient: isToday
+                  ? const LinearGradient(
+                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: isSelected && !isToday
+                  ? const Color(0xFF667EEA).withOpacity(0.15)
+                  : null,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected && !isToday
+                  ? Border.all(color: const Color(0xFF667EEA), width: 1.5)
+                  : null,
+            ),
+            child: Center(
+              child: Text(
+                '$day',
+                style: TextStyle(
+                  color: !isSelectable
+                      ? Colors.grey.shade300
+                      : isToday
+                          ? Colors.white
+                          : isCurrentMonth
+                              ? Colors.black87
+                              : Colors.grey.shade400,
+                  fontWeight: isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -379,45 +462,77 @@ class _QuickOption extends StatelessWidget {
   }
 }
 
-class _PickerColumn extends StatelessWidget {
-  final PageController controller;
-  final int itemCount;
-  final String Function(int) labelBuilder;
+class _TimePicker extends StatelessWidget {
+  final int value;
+  final int maxValue;
+  final String label;
   final ValueChanged<int> onChanged;
 
-  const _PickerColumn({
-    required this.controller,
-    required this.itemCount,
-    required this.labelBuilder,
+  const _TimePicker({
+    required this.value,
+    required this.maxValue,
+    required this.label,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<ScrollEndNotification>(
-      onNotification: (notification) {
-        final page = (notification.metrics.pixels / 50).round();
-        if (page >= 0 && page < itemCount) {
-          onChanged(page);
-        }
-        return true;
-      },
-      child: ListView.builder(
-        controller: controller,
-        physics: const BouncingScrollPhysics(),
-        itemCount: itemCount,
-        itemExtent: 50,
-        itemBuilder: (context, index) {
-          return Center(
-            child: Text(
-              labelBuilder(index),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+    return Container(
+      width: 80,
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 减少按钮
+          GestureDetector(
+            onTap: () {
+              if (value > 0) onChanged(value - 1);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.keyboard_arrow_up_rounded,
+                color: Colors.grey.shade600,
               ),
             ),
-          );
-        },
+          ),
+          // 值显示
+          Expanded(
+            child: Center(
+              child: Text(
+                value.toString().padLeft(2, '0'),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF667EEA),
+                ),
+              ),
+            ),
+          ),
+          // 增加按钮
+          GestureDetector(
+            onTap: () {
+              if (value < maxValue) onChanged(value + 1);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

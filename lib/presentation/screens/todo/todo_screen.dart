@@ -349,6 +349,24 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     }
   }
 
+  // 直接删除（用于滑动手势，不显示二次确认）
+  Future<void> _deleteTodoDirect(Todo todo) async {
+    if (todo.id != null) {
+      final repository = ref.read(todoRepositoryProvider);
+      await repository.delete(todo.id!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('已删除'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
+
+  // 带确认的删除（用于菜单操作）
   Future<void> _deleteTodo(Todo todo) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -539,6 +557,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                                     onToggle: () => _toggleComplete(todo),
                                     onTap: () => _editTodo(todo),
                                     onLongPress: () => _showOptions(context, todo),
+                                    onDelete: () => _deleteTodoDirect(todo),
                                   ),
                                 ),
                               ],
@@ -551,6 +570,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                               onToggle: () => _toggleComplete(todo),
                               onTap: () => _editTodo(todo),
                               onLongPress: () => _showOptions(context, todo),
+                              onDelete: () => _deleteTodoDirect(todo),
                             ),
                           );
                         }

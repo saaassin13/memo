@@ -65,6 +65,7 @@ class _CompletedSectionState extends State<CompletedSection> {
                 onToggle: () => widget.onToggle(todo),
                 onTap: () => widget.onTap(todo),
                 onLongPress: () => _showOptions(context, todo),
+                onDelete: () => widget.onDelete(todo),
               );
             }).toList(),
           ),
