@@ -18,107 +18,162 @@ class TodoScreen extends ConsumerStatefulWidget {
 
 class _TodoScreenState extends ConsumerState<TodoScreen> {
   void _showFilterMenu() {
+    final currentFilter = ref.read(todoFilterProvider);
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                '筛选',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 14),
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.list),
-              title: const Text('全部'),
-              trailing: ref.watch(todoFilterProvider) == TodoFilter.all
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoFilterProvider.notifier).state = TodoFilter.all;
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.pending_actions),
-              title: const Text('待处理'),
-              trailing: ref.watch(todoFilterProvider) == TodoFilter.pending
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoFilterProvider.notifier).state = TodoFilter.pending;
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.check_circle),
-              title: const Text('已完成'),
-              trailing: ref.watch(todoFilterProvider) == TodoFilter.completed
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoFilterProvider.notifier).state =
-                    TodoFilter.completed;
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.filter_list_rounded,
+                      color: Color(0xFF667EEA),
+                      size: 24,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      '筛选',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _FilterOption(
+                icon: Icons.list_alt_rounded,
+                title: '全部',
+                subtitle: '显示所有待办',
+                isSelected: currentFilter == TodoFilter.all,
+                onTap: () {
+                  ref.read(todoFilterProvider.notifier).state = TodoFilter.all;
+                  Navigator.pop(context);
+                },
+              ),
+              _FilterOption(
+                icon: Icons.pending_actions_rounded,
+                title: '待处理',
+                subtitle: '只显示未完成',
+                isSelected: currentFilter == TodoFilter.pending,
+                onTap: () {
+                  ref.read(todoFilterProvider.notifier).state = TodoFilter.pending;
+                  Navigator.pop(context);
+                },
+              ),
+              _FilterOption(
+                icon: Icons.check_circle_outline_rounded,
+                title: '已完成',
+                subtitle: '只显示已完成',
+                isSelected: currentFilter == TodoFilter.completed,
+                onTap: () {
+                  ref.read(todoFilterProvider.notifier).state = TodoFilter.completed;
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _showSortMenu() {
+    final currentSort = ref.read(todoSortProvider);
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                '排序',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 14),
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text('截止时间'),
-              trailing: ref.watch(todoSortProvider) == TodoSort.dueDate
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoSortProvider.notifier).state = TodoSort.dueDate;
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.access_time),
-              title: const Text('创建时间'),
-              trailing: ref.watch(todoSortProvider) == TodoSort.createdAt
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoSortProvider.notifier).state = TodoSort.createdAt;
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.sort_by_alpha),
-              title: const Text('名称'),
-              trailing: ref.watch(todoSortProvider) == TodoSort.title
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () {
-                ref.read(todoSortProvider.notifier).state = TodoSort.title;
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sort_rounded,
+                      color: Color(0xFF667EEA),
+                      size: 24,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      '排序',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _FilterOption(
+                icon: Icons.schedule_rounded,
+                title: '截止时间',
+                subtitle: '按截止时间排序',
+                isSelected: currentSort == TodoSort.dueDate,
+                onTap: () {
+                  ref.read(todoSortProvider.notifier).state = TodoSort.dueDate;
+                  Navigator.pop(context);
+                },
+              ),
+              _FilterOption(
+                icon: Icons.access_time_rounded,
+                title: '创建时间',
+                subtitle: '按创建时间排序',
+                isSelected: currentSort == TodoSort.createdAt,
+                onTap: () {
+                  ref.read(todoSortProvider.notifier).state = TodoSort.createdAt;
+                  Navigator.pop(context);
+                },
+              ),
+              _FilterOption(
+                icon: Icons.sort_by_alpha_rounded,
+                title: '名称',
+                subtitle: '按任务名称排序',
+                isSelected: currentSort == TodoSort.title,
+                onTap: () {
+                  ref.read(todoSortProvider.notifier).state = TodoSort.title;
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -127,27 +182,149 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   void _showOptions(BuildContext context, Todo todo) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('编辑'),
-              onTap: () {
-                Navigator.pop(context);
-                _editTodo(todo);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: Colors.red.shade400),
-              title: Text('删除', style: TextStyle(color: Colors.red.shade400)),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteTodo(todo);
-              },
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 14),
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  todo.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _editTodo(todo);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF667EEA).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF667EEA).withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF667EEA).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.edit_rounded,
+                              color: Color(0xFF667EEA),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Text(
+                              '编辑',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Color(0xFF667EEA),
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Color(0xFF667EEA),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _deleteTodo(todo);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.shade100,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.delete_rounded,
+                              color: Colors.red.shade400,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              '删除',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.red.shade400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.red.shade400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -164,6 +341,8 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(updated.isCompleted ? '已完成' : '已取消完成'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -174,6 +353,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('删除待办'),
         content: const Text('确定要删除这条待办吗？'),
         actions: [
@@ -194,7 +374,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       await repository.delete(todo.id!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已删除')),
+          SnackBar(
+            content: const Text('已删除'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         );
       }
     }
@@ -218,94 +402,172 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     final todosAsync = ref.watch(filteredTodosProvider);
     final completedTodos = ref.watch(completedTodosProvider);
     final filter = ref.watch(todoFilterProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('待办'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF11998E).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              '待办事项',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
+          _ActionButton(
+            icon: Icons.filter_list_rounded,
             onPressed: _showFilterMenu,
           ),
-          IconButton(
-            icon: const Icon(Icons.sort),
+          _ActionButton(
+            icon: Icons.sort_rounded,
             onPressed: _showSortMenu,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          const TodoCategoryChips(),
+          Container(
+            color: colorScheme.surface,
+            child: const TodoCategoryChips(),
+          ),
           Expanded(
             child: todosAsync.when(
               data: (todos) {
-                // 分离待办和已办
-                final pendingTodos =
-                    todos.where((t) => !t.isCompleted).toList();
-                final displayCompleted = filter == TodoFilter.completed
-                    ? completedTodos
-                    : <Todo>[];
+                List<Todo> displayTodos;
+                List<Todo> displayCompleted = [];
 
-                if (pendingTodos.isEmpty && displayCompleted.isEmpty) {
+                switch (filter) {
+                  case TodoFilter.pending:
+                    displayTodos = todos.where((t) => !t.isCompleted).toList();
+                    break;
+                  case TodoFilter.completed:
+                    displayTodos = [];
+                    displayCompleted = todos.where((t) => t.isCompleted).toList();
+                    break;
+                  case TodoFilter.all:
+                  default:
+                    displayTodos = todos.where((t) => !t.isCompleted).toList();
+                    displayCompleted = completedTodos;
+                    break;
+                }
+
+                if (displayTodos.isEmpty && displayCompleted.isEmpty) {
                   return EmptyTodo(onAdd: _addTodo);
                 }
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(todosProvider);
-                  },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: pendingTodos.length + (displayCompleted.isNotEmpty && filter == TodoFilter.all ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // 待办列表
-                      if (index < pendingTodos.length) {
-                        final todo = pendingTodos[index];
-                        if (index == 0) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                                child: Text(
-                                  '待办',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black54,
+                return Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(todosProvider);
+                    },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(top: 16, bottom: 100),
+                      itemCount: displayTodos.length + (displayCompleted.isNotEmpty ? 1 : 0) + displayCompleted.length,
+                      itemBuilder: (context, index) {
+                        if (index < displayTodos.length) {
+                          final todo = displayTodos[index];
+                          if (index == 0) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          '待办 ${displayTodos.length}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              TodoListTile(
-                                todo: todo,
-                                onToggle: () => _toggleComplete(todo),
-                                onTap: () => _editTodo(todo),
-                                onLongPress: () => _showOptions(context, todo),
-                              ),
-                            ],
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: TodoListTile(
+                                    todo: todo,
+                                    onToggle: () => _toggleComplete(todo),
+                                    onTap: () => _editTodo(todo),
+                                    onLongPress: () => _showOptions(context, todo),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: TodoListTile(
+                              todo: todo,
+                              onToggle: () => _toggleComplete(todo),
+                              onTap: () => _editTodo(todo),
+                              onLongPress: () => _showOptions(context, todo),
+                            ),
                           );
                         }
-                        return TodoListTile(
-                          todo: todo,
-                          onToggle: () => _toggleComplete(todo),
-                          onTap: () => _editTodo(todo),
-                          onLongPress: () => _showOptions(context, todo),
-                        );
-                      }
 
-                      // 已办列表
-                      final completedIndex = index - pendingTodos.length;
-                      if (completedIndex == 0 && displayCompleted.isNotEmpty && filter == TodoFilter.all) {
-                        return CompletedSection(
-                          completedTodos: displayCompleted,
-                          onToggle: (todo) => _toggleComplete(todo),
-                          onTap: (todo) => _editTodo(todo),
-                          onDelete: (todo) => _deleteTodo(todo),
-                        );
-                      }
+                        final completedIndex = index - displayTodos.length;
+                        if (completedIndex == 0 && displayCompleted.isNotEmpty) {
+                          return CompletedSection(
+                            completedTodos: displayCompleted,
+                            onToggle: (todo) => _toggleComplete(todo),
+                            onTap: (todo) => _editTodo(todo),
+                            onDelete: (todo) => _deleteTodo(todo),
+                          );
+                        }
 
-                      return const SizedBox.shrink();
-                    },
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ),
                 );
               },
@@ -314,8 +576,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline,
-                        size: 48, color: Theme.of(context).colorScheme.error),
+                    Icon(Icons.error_outline, size: 48, color: colorScheme.error),
                     const SizedBox(height: 16),
                     Text('加载失败: $error'),
                     const SizedBox(height: 16),
@@ -331,19 +592,17 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         ],
       ),
       floatingActionButton: Container(
-        width: 56,
-        height: 56,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+            colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF667EEA).withOpacity(0.4),
-              blurRadius: 12,
+              color: const Color(0xFF11998E).withOpacity(0.4),
+              blurRadius: 16,
               offset: const Offset(0, 6),
             ),
           ],
@@ -352,7 +611,152 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           onPressed: _addTodo,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white),
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _ActionButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFF667EEA).withOpacity(0.08)
+                  : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? const Color(0xFF667EEA).withOpacity(0.3)
+                    : Colors.grey.shade100,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF667EEA).withOpacity(0.15)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected
+                        ? const Color(0xFF667EEA)
+                        : Colors.grey.shade600,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: isSelected
+                              ? const Color(0xFF667EEA)
+                              : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: isSelected
+                      ? Container(
+                          key: const ValueKey('check'),
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF667EEA),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
