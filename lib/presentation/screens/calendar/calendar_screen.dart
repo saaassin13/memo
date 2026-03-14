@@ -444,6 +444,7 @@ class _MonthView extends ConsumerWidget {
     final days = getMonthDays(currentMonth);
     final selected = ref.watch(selectedDateProvider);
     final eventDates = ref.watch(monthEventDatesProvider(currentMonth));
+    final selectedDayEvents = ref.watch(dayEventsProvider(selected));
 
     return Column(
       children: [
@@ -468,83 +469,385 @@ class _MonthView extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
-        // 日期网格
+        // 日期网格 - 使用自定义布局让选中日期的事件显示在该日期下方
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              childAspectRatio: 1,
-            ),
-            itemCount: days.length,
-            itemBuilder: (context, index) {
-              final day = days[index];
-              final isCurrentMonth = day.month == currentMonth.month;
-              final isSelected = isSameDay(day, selected);
-              final isTodayDate = isToday(day);
-              final dayKey = DateTime(day.year, day.month, day.day);
-              final hasEvents = eventDates.contains(dayKey);
-
-              return GestureDetector(
-                onTap: () {
-                  ref.read(selectedDateProvider.notifier).state = day;
-                },
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    gradient: isTodayDate
-                        ? const LinearGradient(
-                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                    color: isSelected && !isTodayDate
-                        ? const Color(0xFF667EEA).withOpacity(0.1)
-                        : null,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected && !isTodayDate
-                        ? Border.all(color: const Color(0xFF667EEA), width: 1.5)
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${day.day}',
-                        style: TextStyle(
-                          color: isTodayDate
-                              ? Colors.white
-                              : isCurrentMonth
-                                  ? Colors.black87
-                                  : Colors.grey.shade400,
-                          fontWeight: isSelected || isTodayDate
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          fontSize: 14,
-                        ),
-                      ),
-                      if (hasEvents && isCurrentMonth) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _EventDot(type: CalendarEventType.todo, date: day, eventDates: eventDates),
-                            const SizedBox(width: 2),
-                            _EventDot(type: CalendarEventType.memo, date: day, eventDates: eventDates),
-                            const SizedBox(width: 2),
-                            _EventDot(type: CalendarEventType.anniversary, date: day, eventDates: eventDates),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          child: _buildCalendarGrid(context, ref, days, selected, eventDates),
         ),
       ],
+    );
+  }
+
+  Widget _buildCalendarGrid(BuildContext context, WidgetRef ref, List<DateTime> days, DateTime selected, Set<DateTime> eventDates) {
+    // 将日期分成6行（每行7天）
+    final rows = <List<DateTime>>[];
+    for (var i = 0; i < days.length; i += 7) {
+      final end = (i + 7 > days.length) ? days.length : i + 7;
+      rows.add(days.sublist(i, end));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      itemCount: rows.length,
+      itemBuilder: (context, rowIndex) {
+        final rowDays = rows[rowIndex];
+        return Column(
+          children: [
+            // 日期行
+            Row(
+              children: rowDays.map((day) {
+                final isCurrentMonth = day.month == currentMonth.month;
+                final isSelected = isSameDay(day, selected);
+                final isTodayDate = isToday(day);
+                final dayKey = DateTime(day.year, day.month, day.day);
+                final hasEvents = eventDates.contains(dayKey);
+
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      ref.read(selectedDateProvider.notifier).state = day;
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.all(2),
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: isTodayDate
+                            ? const LinearGradient(
+                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : isSelected
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF667EEA).withOpacity(0.15),
+                                      const Color(0xFF764BA2).withOpacity(0.15),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected && !isTodayDate
+                            ? Border.all(color: const Color(0xFF667EEA), width: 1.5)
+                            : null,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            '${day.day}',
+                            style: TextStyle(
+                              color: isTodayDate
+                                  ? Colors.white
+                                  : isSelected
+                                      ? const Color(0xFF667EEA)
+                                      : isCurrentMonth
+                                          ? Colors.black87
+                                          : Colors.grey.shade400,
+                              fontWeight: isSelected || isTodayDate
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                          ),
+                          // 有事件的日期用底部小圆点标识
+                          if (hasEvents && isCurrentMonth)
+                            Positioned(
+                              bottom: 4,
+                              child: Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: isTodayDate || isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF11998E),
+                                  shape: BoxShape.circle,
+                                  boxShadow: isTodayDate || isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            blurRadius: 2,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            // 选中日期的事件列表（显示在该日期下方）
+            if (rowDays.any((day) => isSameDay(day, selected)))
+              _buildEventRowForSelectedDay(selected, eventDates),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildEventRowForSelectedDay(DateTime selected, Set<DateTime> eventDates) {
+    final dayKey = DateTime(selected.year, selected.month, selected.day);
+    if (!eventDates.contains(dayKey)) return const SizedBox.shrink();
+
+    return Consumer(
+      builder: (context, ref, _) {
+        final events = ref.watch(dayEventsProvider(selected));
+        return events.maybeWhen(
+          data: (eventList) {
+            if (eventList.isEmpty) return const SizedBox.shrink();
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8, left: 2, right: 2),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white,
+                    Colors.grey.shade50,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667EEA).withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 标题栏
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${selected.month}月${selected.day}日',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${eventList.length} 个事件',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // 事件列表
+                  ...eventList.take(3).map((event) {
+                    final color = eventTypeColors[event.type] ?? Colors.grey;
+                    final icon = _getEventIcon(event.type);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          // 类型图标
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(icon, size: 16, color: color),
+                          ),
+                          const SizedBox(width: 10),
+                          // 事件标题
+                          Expanded(
+                            child: Text(
+                              event.title,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // 类型标签
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _getEventTypeName(event.type),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            );
+          },
+          orElse: () => const SizedBox.shrink(),
+        );
+      },
+    );
+  }
+
+  IconData _getEventIcon(CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.todo:
+        return Icons.check_circle_rounded;
+      case CalendarEventType.memo:
+        return Icons.note_alt_rounded;
+      case CalendarEventType.anniversary:
+        return Icons.cake_rounded;
+      case CalendarEventType.goal:
+        return Icons.flag_rounded;
+      case CalendarEventType.weight:
+        return Icons.monitor_weight_rounded;
+    }
+  }
+
+  String _getEventTypeName(CalendarEventType type) {
+    switch (type) {
+      case CalendarEventType.todo:
+        return '待办';
+      case CalendarEventType.memo:
+        return '备忘';
+      case CalendarEventType.anniversary:
+        return '纪念日';
+      case CalendarEventType.goal:
+        return '目标';
+      case CalendarEventType.weight:
+        return '体重';
+    }
+  }
+}
+
+// 选中日期的事件列表
+class _SelectedDayEvents extends StatelessWidget {
+  final List<CalendarEvent> events;
+
+  const _SelectedDayEvents({required this.events});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(12),
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.event_rounded,
+                size: 16,
+                color: const Color(0xFF667EEA),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${events.length} 个事件',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF667EEA),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.separated(
+              itemCount: events.length > 3 ? 3 : events.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, index) {
+                final event = events[index];
+                final color = eventTypeColors[event.type] ?? Colors.grey;
+                return Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          if (events.length > 3)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '还有 ${events.length - 3} 个事件...',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
