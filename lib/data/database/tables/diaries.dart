@@ -4,7 +4,9 @@ class Diaries extends Table {
   IntColumn get id => integer().autoIncrement()();
   DateTimeColumn get date => dateTime()();
   TextColumn get weather => text().nullable()();
-  TextColumn get content => text()();
+  TextColumn get content => text().withDefault(const Constant(''))();
+  TextColumn get label => text().withDefault(const Constant(''))();
+  TextColumn get mood => text().withDefault(const Constant(''))();
   TextColumn get images => text().withDefault(const Constant(''))(); // JSON 数组字符串
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();

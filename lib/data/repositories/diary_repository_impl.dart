@@ -42,7 +42,9 @@ class DiaryRepositoryImpl implements DiaryRepository {
     return _db.into(_db.diaries).insert(DiariesCompanion.insert(
           date: diary.date,
           weather: Value(diary.weather),
-          content: diary.content,
+          content: Value(diary.content),
+          label: Value(diary.label),
+          mood: Value(diary.mood),
           images: Value(jsonEncode(diary.images)),
         ));
   }
@@ -54,6 +56,8 @@ class DiaryRepositoryImpl implements DiaryRepository {
           date: Value(diary.date),
           weather: Value(diary.weather),
           content: Value(diary.content),
+          label: Value(diary.label),
+          mood: Value(diary.mood),
           images: Value(jsonEncode(diary.images)),
           updatedAt: Value(DateTime.now()),
         ));
@@ -76,6 +80,8 @@ class DiaryRepositoryImpl implements DiaryRepository {
       date: row.date,
       weather: row.weather,
       content: row.content,
+      label: row.label,
+      mood: row.mood,
       images: images,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

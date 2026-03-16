@@ -1152,7 +1152,28 @@ class $DiariesTable extends Diaries with TableInfo<$DiariesTable, Diary> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _moodMeta = const VerificationMeta('mood');
+  @override
+  late final GeneratedColumn<String> mood = GeneratedColumn<String>(
+    'mood',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _imagesMeta = const VerificationMeta('images');
   @override
@@ -1194,6 +1215,8 @@ class $DiariesTable extends Diaries with TableInfo<$DiariesTable, Diary> {
     date,
     weather,
     content,
+    label,
+    mood,
     images,
     createdAt,
     updatedAt,
@@ -1232,8 +1255,18 @@ class $DiariesTable extends Diaries with TableInfo<$DiariesTable, Diary> {
         _contentMeta,
         content.isAcceptableOrUnknown(data['content']!, _contentMeta),
       );
-    } else if (isInserting) {
-      context.missing(_contentMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('mood')) {
+      context.handle(
+        _moodMeta,
+        mood.isAcceptableOrUnknown(data['mood']!, _moodMeta),
+      );
     }
     if (data.containsKey('images')) {
       context.handle(
@@ -1278,6 +1311,14 @@ class $DiariesTable extends Diaries with TableInfo<$DiariesTable, Diary> {
         DriftSqlType.string,
         data['${effectivePrefix}content'],
       )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      mood: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mood'],
+      )!,
       images: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}images'],
@@ -1304,6 +1345,8 @@ class Diary extends DataClass implements Insertable<Diary> {
   final DateTime date;
   final String? weather;
   final String content;
+  final String label;
+  final String mood;
   final String images;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -1312,6 +1355,8 @@ class Diary extends DataClass implements Insertable<Diary> {
     required this.date,
     this.weather,
     required this.content,
+    required this.label,
+    required this.mood,
     required this.images,
     required this.createdAt,
     required this.updatedAt,
@@ -1325,6 +1370,8 @@ class Diary extends DataClass implements Insertable<Diary> {
       map['weather'] = Variable<String>(weather);
     }
     map['content'] = Variable<String>(content);
+    map['label'] = Variable<String>(label);
+    map['mood'] = Variable<String>(mood);
     map['images'] = Variable<String>(images);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1339,6 +1386,8 @@ class Diary extends DataClass implements Insertable<Diary> {
           ? const Value.absent()
           : Value(weather),
       content: Value(content),
+      label: Value(label),
+      mood: Value(mood),
       images: Value(images),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -1355,6 +1404,8 @@ class Diary extends DataClass implements Insertable<Diary> {
       date: serializer.fromJson<DateTime>(json['date']),
       weather: serializer.fromJson<String?>(json['weather']),
       content: serializer.fromJson<String>(json['content']),
+      label: serializer.fromJson<String>(json['label']),
+      mood: serializer.fromJson<String>(json['mood']),
       images: serializer.fromJson<String>(json['images']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -1368,6 +1419,8 @@ class Diary extends DataClass implements Insertable<Diary> {
       'date': serializer.toJson<DateTime>(date),
       'weather': serializer.toJson<String?>(weather),
       'content': serializer.toJson<String>(content),
+      'label': serializer.toJson<String>(label),
+      'mood': serializer.toJson<String>(mood),
       'images': serializer.toJson<String>(images),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -1379,6 +1432,8 @@ class Diary extends DataClass implements Insertable<Diary> {
     DateTime? date,
     Value<String?> weather = const Value.absent(),
     String? content,
+    String? label,
+    String? mood,
     String? images,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -1387,6 +1442,8 @@ class Diary extends DataClass implements Insertable<Diary> {
     date: date ?? this.date,
     weather: weather.present ? weather.value : this.weather,
     content: content ?? this.content,
+    label: label ?? this.label,
+    mood: mood ?? this.mood,
     images: images ?? this.images,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -1397,6 +1454,8 @@ class Diary extends DataClass implements Insertable<Diary> {
       date: data.date.present ? data.date.value : this.date,
       weather: data.weather.present ? data.weather.value : this.weather,
       content: data.content.present ? data.content.value : this.content,
+      label: data.label.present ? data.label.value : this.label,
+      mood: data.mood.present ? data.mood.value : this.mood,
       images: data.images.present ? data.images.value : this.images,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -1410,6 +1469,8 @@ class Diary extends DataClass implements Insertable<Diary> {
           ..write('date: $date, ')
           ..write('weather: $weather, ')
           ..write('content: $content, ')
+          ..write('label: $label, ')
+          ..write('mood: $mood, ')
           ..write('images: $images, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -1418,8 +1479,17 @@ class Diary extends DataClass implements Insertable<Diary> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, date, weather, content, images, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    date,
+    weather,
+    content,
+    label,
+    mood,
+    images,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1428,6 +1498,8 @@ class Diary extends DataClass implements Insertable<Diary> {
           other.date == this.date &&
           other.weather == this.weather &&
           other.content == this.content &&
+          other.label == this.label &&
+          other.mood == this.mood &&
           other.images == this.images &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -1438,6 +1510,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
   final Value<DateTime> date;
   final Value<String?> weather;
   final Value<String> content;
+  final Value<String> label;
+  final Value<String> mood;
   final Value<String> images;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -1446,6 +1520,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
     this.date = const Value.absent(),
     this.weather = const Value.absent(),
     this.content = const Value.absent(),
+    this.label = const Value.absent(),
+    this.mood = const Value.absent(),
     this.images = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1454,17 +1530,20 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
     this.id = const Value.absent(),
     required DateTime date,
     this.weather = const Value.absent(),
-    required String content,
+    this.content = const Value.absent(),
+    this.label = const Value.absent(),
+    this.mood = const Value.absent(),
     this.images = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : date = Value(date),
-       content = Value(content);
+  }) : date = Value(date);
   static Insertable<Diary> custom({
     Expression<int>? id,
     Expression<DateTime>? date,
     Expression<String>? weather,
     Expression<String>? content,
+    Expression<String>? label,
+    Expression<String>? mood,
     Expression<String>? images,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -1474,6 +1553,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
       if (date != null) 'date': date,
       if (weather != null) 'weather': weather,
       if (content != null) 'content': content,
+      if (label != null) 'label': label,
+      if (mood != null) 'mood': mood,
       if (images != null) 'images': images,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1485,6 +1566,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
     Value<DateTime>? date,
     Value<String?>? weather,
     Value<String>? content,
+    Value<String>? label,
+    Value<String>? mood,
     Value<String>? images,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -1494,6 +1577,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
       date: date ?? this.date,
       weather: weather ?? this.weather,
       content: content ?? this.content,
+      label: label ?? this.label,
+      mood: mood ?? this.mood,
       images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1515,6 +1600,12 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
     if (content.present) {
       map['content'] = Variable<String>(content.value);
     }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (mood.present) {
+      map['mood'] = Variable<String>(mood.value);
+    }
     if (images.present) {
       map['images'] = Variable<String>(images.value);
     }
@@ -1534,6 +1625,8 @@ class DiariesCompanion extends UpdateCompanion<Diary> {
           ..write('date: $date, ')
           ..write('weather: $weather, ')
           ..write('content: $content, ')
+          ..write('label: $label, ')
+          ..write('mood: $mood, ')
           ..write('images: $images, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -4397,7 +4490,9 @@ typedef $$DiariesTableCreateCompanionBuilder =
       Value<int> id,
       required DateTime date,
       Value<String?> weather,
-      required String content,
+      Value<String> content,
+      Value<String> label,
+      Value<String> mood,
       Value<String> images,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -4408,6 +4503,8 @@ typedef $$DiariesTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<String?> weather,
       Value<String> content,
+      Value<String> label,
+      Value<String> mood,
       Value<String> images,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -4439,6 +4536,16 @@ class $$DiariesTableFilterComposer
 
   ColumnFilters<String> get content => $composableBuilder(
     column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mood => $composableBuilder(
+    column: $table.mood,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4487,6 +4594,16 @@ class $$DiariesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mood => $composableBuilder(
+    column: $table.mood,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get images => $composableBuilder(
     column: $table.images,
     builder: (column) => ColumnOrderings(column),
@@ -4523,6 +4640,12 @@ class $$DiariesTableAnnotationComposer
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get mood =>
+      $composableBuilder(column: $table.mood, builder: (column) => column);
 
   GeneratedColumn<String> get images =>
       $composableBuilder(column: $table.images, builder: (column) => column);
@@ -4566,6 +4689,8 @@ class $$DiariesTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<String?> weather = const Value.absent(),
                 Value<String> content = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> mood = const Value.absent(),
                 Value<String> images = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4574,6 +4699,8 @@ class $$DiariesTableTableManager
                 date: date,
                 weather: weather,
                 content: content,
+                label: label,
+                mood: mood,
                 images: images,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4583,7 +4710,9 @@ class $$DiariesTableTableManager
                 Value<int> id = const Value.absent(),
                 required DateTime date,
                 Value<String?> weather = const Value.absent(),
-                required String content,
+                Value<String> content = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> mood = const Value.absent(),
                 Value<String> images = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4592,6 +4721,8 @@ class $$DiariesTableTableManager
                 date: date,
                 weather: weather,
                 content: content,
+                label: label,
+                mood: mood,
                 images: images,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -199,8 +199,18 @@ class _MemoListScreenState extends ConsumerState<MemoListScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              context.go('/home');
+            }
+          }
+        },
+        child: Column(
+          children: [
           const CategoryChips(),
           Expanded(
             child: memosAsync.when(
@@ -296,6 +306,7 @@ class _MemoListScreenState extends ConsumerState<MemoListScreen> {
             ),
           ),
         ],
+      ),
       ),
       floatingActionButton: Container(
         width: 56,

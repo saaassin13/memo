@@ -175,7 +175,17 @@ class _AnniversaryScreenState extends ConsumerState<AnniversaryScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: anniversariesAsync.when(
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              context.go('/home');
+            }
+          }
+        },
+        child: anniversariesAsync.when(
         data: (anniversaries) {
           if (anniversaries.isEmpty) {
             return EmptyAnniversary(onAdd: _addAnniversary);
@@ -271,6 +281,7 @@ class _AnniversaryScreenState extends ConsumerState<AnniversaryScreen> {
             ],
           ),
         ),
+      ),
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(

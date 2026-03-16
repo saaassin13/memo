@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -39,6 +39,11 @@ class AppDatabase extends _$AppDatabase {
         if (from < 4) {
           // 创建纪念日表
           await m.createTable(anniversaries);
+        }
+        if (from < 5) {
+          // 添加日记 label 和 mood 字段
+          await m.addColumn(diaries, diaries.label);
+          await m.addColumn(diaries, diaries.mood);
         }
       },
     );
