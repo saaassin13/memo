@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/repository_providers.dart';
 import '../../../domain/entities/anniversary.dart';
 import '../../../core/utils/lunar_calendar.dart';
+import '../../widgets/anniversary/lunar_date_picker.dart';
 
 class AnniversaryEditScreen extends ConsumerStatefulWidget {
   final Anniversary? anniversary;
@@ -82,25 +83,36 @@ class _AnniversaryEditScreenState extends ConsumerState<AnniversaryEditScreen> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFF5576C),
+    final DateTime? picked;
+    if (_isLunar) {
+      // 选择农历：显示农历日历
+      picked = await LunarDatePicker.show(
+        context,
+        initialDate: _selectedDate,
+      );
+    } else {
+      // 选择公历：显示公历日历
+      picked = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate,
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2100),
+        locale: const Locale('zh', 'CN'),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: Color(0xFFF5576C),
+              ),
             ),
-          ),
-          child: child!,
-        );
-      },
-    );
+            child: child!,
+          );
+        },
+      );
+    }
     if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = picked!;
       });
     }
   }
