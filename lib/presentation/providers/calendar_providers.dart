@@ -4,10 +4,12 @@ import '../../domain/entities/todo.dart';
 import '../../domain/entities/memo.dart';
 import '../../domain/entities/countdown.dart';
 import '../../domain/entities/weight.dart';
+import '../../domain/entities/anniversary.dart';
 import 'repository_providers.dart';
 import 'memo_providers.dart';
 import 'todo_providers.dart';
 import 'other_providers.dart';
+import 'anniversary_providers.dart';
 
 // 视图模式
 enum CalendarViewMode { day, week, month }
@@ -93,6 +95,19 @@ final weightEventsProvider = Provider.family<AsyncValue<Weight?>, DateTime>((ref
   });
 });
 
+// 纪念日事件 Provider - 按日期筛选 (使用新 Anniversary 实体)
+final anniversaryEventsByDateProvider = Provider.family<AsyncValue<List<Anniversary>>, DateTime>((ref, date) {
+  final anniversariesAsync = ref.watch(anniversariesProvider);
+
+  return anniversariesAsync.whenData((anniversaries) {
+    return anniversaries.where((a) {
+      final next = a.nextDate;
+      return isSameDay(next, date);
+    }).toList()
+      ..sort((a, b) => a.daysUntil.compareTo(b.daysUntil));
+  });
+});
+
 // 综合日历事件 Provider
 class CalendarEvent {
   final String id;
@@ -117,96 +132,127 @@ final dayEventsProvider = Provider.family<AsyncValue<List<CalendarEvent>>, DateT
   final todoAsync = ref.watch(todoEventsProvider(date));
   final memoAsync = ref.watch(memoEventsProvider(date));
   final weightAsync = ref.watch(weightEventsProvider(date));
+  final anniversaryAsync = ref.watch(anniversaryEventsByDateProvider(date));
   final countdownsAsync = ref.watch(countdownEventsProvider);
   final filter = ref.watch(eventTypeFilterProvider);
 
   return todoAsync.when(
     data: (todos) => memoAsync.when(
       data: (memos) => weightAsync.when(
-        data: (weight) => countdownsAsync.when(
-          data: (countdowns) {
-            final List<CalendarEvent> events = [];
+        data: (weight) => anniversaryAsync.when(
+          data: (anniversaries) => countdownsAsync.when(
+            data: (countdowns) {
+              final List<CalendarEvent> events = [];
 
-            // 添加待办事件
-            if (filter.contains(CalendarEventType.todo)) {
-              for (final todo in todos) {
+              // 添加待办事件
+              if (filter.contains(CalendarEventType.todo)) {
+                for (final todo in todos) {
+                  events.add(CalendarEvent(
+                    id: 'todo_${todo.id}',
+                    type: CalendarEventType.todo,
+                    date: todo.dueDate!,
+                    title: todo.title,
+                    subtitle: todo.category,
+                    data: todo,
+                  ));
+                }
+              }
+
+              // 添加备忘事件
+              if (filter.contains(CalendarEventType.memo)) {
+                for (final memo in memos) {
+                  events.add(CalendarEvent(
+                    id: 'memo_${memo.id}',
+                    type: CalendarEventType.memo,
+                    date: memo.remindTime!,
+                    title: memo.title,
+                    subtitle: memo.category,
+                    data: memo,
+                  ));
+                }
+              }
+
+              // 添加体重记录
+              if (filter.contains(CalendarEventType.weight) && weight != null) {
                 events.add(CalendarEvent(
-                  id: 'todo_${todo.id}',
-                  type: CalendarEventType.todo,
-                  date: todo.dueDate!,
-                  title: todo.title,
-                  subtitle: todo.category,
-                  data: todo,
+                  id: 'weight_${weight.id}',
+                  type: CalendarEventType.weight,
+                  date: weight.date,
+                  title: '${weight.value} kg',
+                  subtitle: '体重记录',
+                  data: weight,
                 ));
               }
-            }
 
-            // 添加备忘事件
-            if (filter.contains(CalendarEventType.memo)) {
-              for (final memo in memos) {
-                events.add(CalendarEvent(
-                  id: 'memo_${memo.id}',
-                  type: CalendarEventType.memo,
-                  date: memo.remindTime!,
-                  title: memo.title,
-                  subtitle: memo.category,
-                  data: memo,
-                ));
-              }
-            }
-
-            // 添加体重记录
-            if (filter.contains(CalendarEventType.weight) && weight != null) {
-              events.add(CalendarEvent(
-                id: 'weight_${weight.id}',
-                type: CalendarEventType.weight,
-                date: weight.date,
-                title: '${weight.value} kg',
-                subtitle: '体重记录',
-                data: weight,
-              ));
-            }
-
-            // 添加纪念日
-            if (filter.contains(CalendarEventType.anniversary)) {
-              final now = DateTime.now();
-              final today = DateTime(now.year, now.month, now.day);
-              for (final countdown in countdowns) {
-                final targetDay = DateTime(
-                  date.year,
-                  countdown.targetDate.month,
-                  countdown.targetDate.day,
-                );
-                if (isSameDay(targetDay, date)) {
-                  final daysUntil = countdown.targetDate.difference(today).inDays;
+              // 添加纪念日 (新 Anniversary 实体)
+              if (filter.contains(CalendarEventType.anniversary)) {
+                for (final anniversary in anniversaries) {
+                  final nextDate = anniversary.nextDate;
+                  final daysUntil = anniversary.daysUntil;
                   String subtitle;
                   if (daysUntil == 0) {
                     subtitle = '就是今天!';
                   } else if (daysUntil == 1) {
                     subtitle = '明天';
-                  } else if (daysUntil == -1) {
-                    subtitle = '昨天';
                   } else if (daysUntil > 0) {
                     subtitle = '还有 $daysUntil 天';
                   } else {
                     subtitle = '已过 ${-daysUntil} 天';
                   }
                   events.add(CalendarEvent(
-                    id: 'countdown_${countdown.id}',
+                    id: 'anniversary_${anniversary.id}',
                     type: CalendarEventType.anniversary,
-                    date: targetDay,
-                    title: countdown.name,
+                    date: nextDate,
+                    title: anniversary.title,
                     subtitle: subtitle,
-                    data: countdown,
+                    data: anniversary,
                   ));
                 }
               }
-            }
 
-            // 按日期排序
-            events.sort((a, b) => a.date.compareTo(b.date));
-            return AsyncValue.data(events);
-          },
+              // 添加旧纪念日 (Countdown)
+              if (filter.contains(CalendarEventType.anniversary)) {
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                for (final countdown in countdowns) {
+                  final targetDay = DateTime(
+                    date.year,
+                    countdown.targetDate.month,
+                    countdown.targetDate.day,
+                  );
+                  if (isSameDay(targetDay, date)) {
+                    final daysUntil = countdown.targetDate.difference(today).inDays;
+                    String subtitle;
+                    if (daysUntil == 0) {
+                      subtitle = '就是今天!';
+                    } else if (daysUntil == 1) {
+                      subtitle = '明天';
+                    } else if (daysUntil == -1) {
+                      subtitle = '昨天';
+                    } else if (daysUntil > 0) {
+                      subtitle = '还有 $daysUntil 天';
+                    } else {
+                      subtitle = '已过 ${-daysUntil} 天';
+                    }
+                    events.add(CalendarEvent(
+                      id: 'countdown_${countdown.id}',
+                      type: CalendarEventType.anniversary,
+                      date: targetDay,
+                      title: countdown.name,
+                      subtitle: subtitle,
+                      data: countdown,
+                    ));
+                  }
+                }
+              }
+
+              // 按日期排序
+              events.sort((a, b) => a.date.compareTo(b.date));
+              return AsyncValue.data(events);
+            },
+            loading: () => const AsyncValue.loading(),
+            error: (e, st) => AsyncValue.error(e, st),
+          ),
           loading: () => const AsyncValue.loading(),
           error: (e, st) => AsyncValue.error(e, st),
         ),
@@ -226,6 +272,7 @@ final monthEventDatesProvider = Provider.family<Set<DateTime>, DateTime>((ref, m
   final todosAsync = ref.watch(todosProvider);
   final memosAsync = ref.watch(memosProvider);
   final countdownsAsync = ref.watch(countdownsProvider);
+  final anniversariesAsync = ref.watch(anniversariesProvider);
   final filter = ref.watch(eventTypeFilterProvider);
 
   final Set<DateTime> eventDates = {};
@@ -250,11 +297,19 @@ final monthEventDatesProvider = Provider.family<Set<DateTime>, DateTime>((ref, m
     }
   }
 
-  // 从纪念日中获取日期
+  // 从纪念日 (Anniversary) 中获取日期
+  final anniversaries = anniversariesAsync.valueOrNull ?? [];
+  if (filter.contains(CalendarEventType.anniversary)) {
+    for (final anniversary in anniversaries) {
+      final nextDate = anniversary.nextDate;
+      eventDates.add(DateTime(nextDate.year, nextDate.month, nextDate.day));
+    }
+  }
+
+  // 从纪念日 (Countdown) 中获取日期
   final countdowns = countdownsAsync.valueOrNull ?? [];
   if (filter.contains(CalendarEventType.anniversary)) {
     for (final countdown in countdowns) {
-      // 每年重复的纪念日
       eventDates.add(DateTime(month.year, countdown.targetDate.month, countdown.targetDate.day));
     }
   }
