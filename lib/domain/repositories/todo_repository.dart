@@ -6,4 +6,5 @@ abstract class TodoRepository {
   Future<int> insert(Todo todo);
   Future<bool> update(Todo todo);
   Future<int> delete(int id);
+  Future<bool> togglePin(int id, bool isPinned);
 }

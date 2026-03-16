@@ -4,6 +4,7 @@ class Todo {
   final String? description;
   final String category;
   final bool isCompleted;
+  final bool isPinned;
   final DateTime? dueDate;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -14,6 +15,7 @@ class Todo {
     this.description,
     this.category = '杂项',
     this.isCompleted = false,
+    this.isPinned = false,
     this.dueDate,
     required this.createdAt,
     required this.updatedAt,
@@ -25,6 +27,7 @@ class Todo {
     String? description,
     String? category,
     bool? isCompleted,
+    bool? isPinned,
     DateTime? dueDate,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -35,6 +38,7 @@ class Todo {
       description: description ?? this.description,
       category: category ?? this.category,
       isCompleted: isCompleted ?? this.isCompleted,
+      isPinned: isPinned ?? this.isPinned,
       dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

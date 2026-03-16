@@ -615,6 +615,21 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isPinnedMeta = const VerificationMeta(
+    'isPinned',
+  );
+  @override
+  late final GeneratedColumn<bool> isPinned = GeneratedColumn<bool>(
+    'is_pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_pinned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _dueDateMeta = const VerificationMeta(
     'dueDate',
   );
@@ -657,6 +672,7 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
     description,
     category,
     isCompleted,
+    isPinned,
     dueDate,
     createdAt,
     updatedAt,
@@ -708,6 +724,12 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
         ),
       );
     }
+    if (data.containsKey('is_pinned')) {
+      context.handle(
+        _isPinnedMeta,
+        isPinned.isAcceptableOrUnknown(data['is_pinned']!, _isPinnedMeta),
+      );
+    }
     if (data.containsKey('due_date')) {
       context.handle(
         _dueDateMeta,
@@ -755,6 +777,10 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
       )!,
+      isPinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_pinned'],
+      )!,
       dueDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}due_date'],
@@ -782,6 +808,7 @@ class Todo extends DataClass implements Insertable<Todo> {
   final String? description;
   final String category;
   final bool isCompleted;
+  final bool isPinned;
   final DateTime? dueDate;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -791,6 +818,7 @@ class Todo extends DataClass implements Insertable<Todo> {
     this.description,
     required this.category,
     required this.isCompleted,
+    required this.isPinned,
     this.dueDate,
     required this.createdAt,
     required this.updatedAt,
@@ -805,6 +833,7 @@ class Todo extends DataClass implements Insertable<Todo> {
     }
     map['category'] = Variable<String>(category);
     map['is_completed'] = Variable<bool>(isCompleted);
+    map['is_pinned'] = Variable<bool>(isPinned);
     if (!nullToAbsent || dueDate != null) {
       map['due_date'] = Variable<DateTime>(dueDate);
     }
@@ -822,6 +851,7 @@ class Todo extends DataClass implements Insertable<Todo> {
           : Value(description),
       category: Value(category),
       isCompleted: Value(isCompleted),
+      isPinned: Value(isPinned),
       dueDate: dueDate == null && nullToAbsent
           ? const Value.absent()
           : Value(dueDate),
@@ -841,6 +871,7 @@ class Todo extends DataClass implements Insertable<Todo> {
       description: serializer.fromJson<String?>(json['description']),
       category: serializer.fromJson<String>(json['category']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      isPinned: serializer.fromJson<bool>(json['isPinned']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -855,6 +886,7 @@ class Todo extends DataClass implements Insertable<Todo> {
       'description': serializer.toJson<String?>(description),
       'category': serializer.toJson<String>(category),
       'isCompleted': serializer.toJson<bool>(isCompleted),
+      'isPinned': serializer.toJson<bool>(isPinned),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -867,6 +899,7 @@ class Todo extends DataClass implements Insertable<Todo> {
     Value<String?> description = const Value.absent(),
     String? category,
     bool? isCompleted,
+    bool? isPinned,
     Value<DateTime?> dueDate = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -876,6 +909,7 @@ class Todo extends DataClass implements Insertable<Todo> {
     description: description.present ? description.value : this.description,
     category: category ?? this.category,
     isCompleted: isCompleted ?? this.isCompleted,
+    isPinned: isPinned ?? this.isPinned,
     dueDate: dueDate.present ? dueDate.value : this.dueDate,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -891,6 +925,7 @@ class Todo extends DataClass implements Insertable<Todo> {
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
+      isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -905,6 +940,7 @@ class Todo extends DataClass implements Insertable<Todo> {
           ..write('description: $description, ')
           ..write('category: $category, ')
           ..write('isCompleted: $isCompleted, ')
+          ..write('isPinned: $isPinned, ')
           ..write('dueDate: $dueDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -919,6 +955,7 @@ class Todo extends DataClass implements Insertable<Todo> {
     description,
     category,
     isCompleted,
+    isPinned,
     dueDate,
     createdAt,
     updatedAt,
@@ -932,6 +969,7 @@ class Todo extends DataClass implements Insertable<Todo> {
           other.description == this.description &&
           other.category == this.category &&
           other.isCompleted == this.isCompleted &&
+          other.isPinned == this.isPinned &&
           other.dueDate == this.dueDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -943,6 +981,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
   final Value<String?> description;
   final Value<String> category;
   final Value<bool> isCompleted;
+  final Value<bool> isPinned;
   final Value<DateTime?> dueDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -952,6 +991,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
     this.description = const Value.absent(),
     this.category = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.isPinned = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -962,6 +1002,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
     this.description = const Value.absent(),
     this.category = const Value.absent(),
     this.isCompleted = const Value.absent(),
+    this.isPinned = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -972,6 +1013,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
     Expression<String>? description,
     Expression<String>? category,
     Expression<bool>? isCompleted,
+    Expression<bool>? isPinned,
     Expression<DateTime>? dueDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -982,6 +1024,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
       if (description != null) 'description': description,
       if (category != null) 'category': category,
       if (isCompleted != null) 'is_completed': isCompleted,
+      if (isPinned != null) 'is_pinned': isPinned,
       if (dueDate != null) 'due_date': dueDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -994,6 +1037,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
     Value<String?>? description,
     Value<String>? category,
     Value<bool>? isCompleted,
+    Value<bool>? isPinned,
     Value<DateTime?>? dueDate,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -1004,6 +1048,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
       description: description ?? this.description,
       category: category ?? this.category,
       isCompleted: isCompleted ?? this.isCompleted,
+      isPinned: isPinned ?? this.isPinned,
       dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1028,6 +1073,9 @@ class TodosCompanion extends UpdateCompanion<Todo> {
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
+    if (isPinned.present) {
+      map['is_pinned'] = Variable<bool>(isPinned.value);
+    }
     if (dueDate.present) {
       map['due_date'] = Variable<DateTime>(dueDate.value);
     }
@@ -1048,6 +1096,7 @@ class TodosCompanion extends UpdateCompanion<Todo> {
           ..write('description: $description, ')
           ..write('category: $category, ')
           ..write('isCompleted: $isCompleted, ')
+          ..write('isPinned: $isPinned, ')
           ..write('dueDate: $dueDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3369,6 +3418,7 @@ typedef $$TodosTableCreateCompanionBuilder =
       Value<String?> description,
       Value<String> category,
       Value<bool> isCompleted,
+      Value<bool> isPinned,
       Value<DateTime?> dueDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -3380,6 +3430,7 @@ typedef $$TodosTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<String> category,
       Value<bool> isCompleted,
+      Value<bool> isPinned,
       Value<DateTime?> dueDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -3415,6 +3466,11 @@ class $$TodosTableFilterComposer extends Composer<_$AppDatabase, $TodosTable> {
 
   ColumnFilters<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3468,6 +3524,11 @@ class $$TodosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get dueDate => $composableBuilder(
     column: $table.dueDate,
     builder: (column) => ColumnOrderings(column),
@@ -3512,6 +3573,9 @@ class $$TodosTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isPinned =>
+      $composableBuilder(column: $table.isPinned, builder: (column) => column);
+
   GeneratedColumn<DateTime> get dueDate =>
       $composableBuilder(column: $table.dueDate, builder: (column) => column);
 
@@ -3555,6 +3619,7 @@ class $$TodosTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3564,6 +3629,7 @@ class $$TodosTableTableManager
                 description: description,
                 category: category,
                 isCompleted: isCompleted,
+                isPinned: isPinned,
                 dueDate: dueDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3575,6 +3641,7 @@ class $$TodosTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3584,6 +3651,7 @@ class $$TodosTableTableManager
                 description: description,
                 category: category,
                 isCompleted: isCompleted,
+                isPinned: isPinned,
                 dueDate: dueDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -12,6 +12,7 @@ class TodoRepositoryImpl implements TodoRepository {
   Stream<List<entity.Todo>> watchAll() {
     return (_db.select(_db.todos)
           ..orderBy([
+            (t) => OrderingTerm(expression: t.isPinned, mode: OrderingMode.desc),
             (t) => OrderingTerm(expression: t.isCompleted, mode: OrderingMode.asc),
             (t) => OrderingTerm(expression: t.dueDate, mode: OrderingMode.asc),
           ]))
@@ -34,6 +35,7 @@ class TodoRepositoryImpl implements TodoRepository {
           description: Value(todo.description),
           category: Value(todo.category),
           isCompleted: Value(todo.isCompleted),
+          isPinned: Value(todo.isPinned),
           dueDate: Value(todo.dueDate),
         ));
   }
@@ -46,6 +48,7 @@ class TodoRepositoryImpl implements TodoRepository {
           description: Value(todo.description),
           category: Value(todo.category),
           isCompleted: Value(todo.isCompleted),
+          isPinned: Value(todo.isPinned),
           dueDate: Value(todo.dueDate),
           updatedAt: Value(DateTime.now()),
         ));
@@ -56,6 +59,17 @@ class TodoRepositoryImpl implements TodoRepository {
     return (_db.delete(_db.todos)..where((t) => t.id.equals(id))).go();
   }
 
+  @override
+  Future<bool> togglePin(int id, bool isPinned) async {
+    final count = await (_db.update(_db.todos)
+          ..where((t) => t.id.equals(id)))
+        .write(TodosCompanion(
+      isPinned: Value(isPinned),
+      updatedAt: Value(DateTime.now()),
+    ));
+    return count > 0;
+  }
+
   entity.Todo _mapToEntity(Todo row) {
     return entity.Todo(
       id: row.id,
@@ -63,6 +77,7 @@ class TodoRepositoryImpl implements TodoRepository {
       description: row.description,
       category: row.category,
       isCompleted: row.isCompleted,
+      isPinned: row.isPinned,
       dueDate: row.dueDate,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

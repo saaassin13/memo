@@ -7,6 +7,8 @@ class CompletedSection extends StatefulWidget {
   final Function(Todo) onToggle;
   final Function(Todo) onTap;
   final Function(Todo) onDelete;
+  final Function(Todo)? onPin;
+  final Function(Todo)? onEdit;
 
   const CompletedSection({
     super.key,
@@ -14,6 +16,8 @@ class CompletedSection extends StatefulWidget {
     required this.onToggle,
     required this.onTap,
     required this.onDelete,
+    this.onPin,
+    this.onEdit,
   });
 
   @override
@@ -64,8 +68,9 @@ class _CompletedSectionState extends State<CompletedSection> {
                 todo: todo,
                 onToggle: () => widget.onToggle(todo),
                 onTap: () => widget.onTap(todo),
-                onLongPress: () => _showOptions(context, todo),
+                onEdit: widget.onEdit != null ? () => widget.onEdit!(todo) : null,
                 onDelete: () => widget.onDelete(todo),
+                onPin: widget.onPin != null ? () => widget.onPin!(todo) : null,
               );
             }).toList(),
           ),
@@ -74,35 +79,6 @@ class _CompletedSectionState extends State<CompletedSection> {
           duration: const Duration(milliseconds: 300),
         ),
       ],
-    );
-  }
-
-  void _showOptions(BuildContext context, Todo todo) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('编辑'),
-              onTap: () {
-                Navigator.pop(context);
-                widget.onTap(todo);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: Colors.red.shade400),
-              title: Text('删除', style: TextStyle(color: Colors.red.shade400)),
-              onTap: () {
-                Navigator.pop(context);
-                widget.onDelete(todo);
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

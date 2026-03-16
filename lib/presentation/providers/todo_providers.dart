@@ -51,24 +51,23 @@ final filteredTodosProvider = Provider<AsyncValue<List<Todo>>>((ref) {
         break;
     }
 
-    // 排序
-    switch (sort) {
-      case TodoSort.dueDate:
-        filtered.sort((a, b) {
-          // 未设置截止时间的排后面
+    // 排序（置顶优先）
+    filtered.sort((a, b) {
+      // 置顶项排在前面
+      if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
+      // 同为置顶或非置顶时，按选择的方式排序
+      switch (sort) {
+        case TodoSort.dueDate:
           if (a.dueDate == null && b.dueDate == null) return 0;
           if (a.dueDate == null) return 1;
           if (b.dueDate == null) return -1;
           return a.dueDate!.compareTo(b.dueDate!);
-        });
-        break;
-      case TodoSort.createdAt:
-        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        break;
-      case TodoSort.title:
-        filtered.sort((a, b) => a.title.compareTo(b.title));
-        break;
-    }
+        case TodoSort.createdAt:
+          return b.createdAt.compareTo(a.createdAt);
+        case TodoSort.title:
+          return a.title.compareTo(b.title);
+      }
+    });
 
     return filtered;
   });

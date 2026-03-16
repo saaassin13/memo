@@ -330,6 +330,32 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     );
   }
 
+  Future<void> _togglePin(Todo todo) async {
+    try {
+      final repository = ref.read(todoRepositoryProvider);
+      await repository.togglePin(todo.id!, !todo.isPinned);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(todo.isPinned ? '已取消置顶' : '已置顶'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('置顶失败: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _toggleComplete(Todo todo) async {
     final repository = ref.read(todoRepositoryProvider);
     final updated = todo.copyWith(
@@ -556,8 +582,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                                     todo: todo,
                                     onToggle: () => _toggleComplete(todo),
                                     onTap: () => _editTodo(todo),
-                                    onLongPress: () => _showOptions(context, todo),
+                                    onEdit: () => _editTodo(todo),
                                     onDelete: () => _deleteTodoDirect(todo),
+                                    onPin: () => _togglePin(todo),
                                   ),
                                 ),
                               ],
@@ -569,8 +596,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                               todo: todo,
                               onToggle: () => _toggleComplete(todo),
                               onTap: () => _editTodo(todo),
-                              onLongPress: () => _showOptions(context, todo),
+                              onEdit: () => _editTodo(todo),
                               onDelete: () => _deleteTodoDirect(todo),
+                              onPin: () => _togglePin(todo),
                             ),
                           );
                         }
@@ -581,7 +609,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                             completedTodos: displayCompleted,
                             onToggle: (todo) => _toggleComplete(todo),
                             onTap: (todo) => _editTodo(todo),
+                            onEdit: (todo) => _editTodo(todo),
                             onDelete: (todo) => _deleteTodo(todo),
+                            onPin: (todo) => _togglePin(todo),
                           );
                         }
 

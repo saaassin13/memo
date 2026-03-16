@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -30,6 +30,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 2) {
           // 添加 images 字段
           await m.addColumn(memos, memos.images);
+        }
+        if (from < 3) {
+          // 添加 isPinned 字段
+          await m.addColumn(todos, todos.isPinned);
         }
       },
     );
