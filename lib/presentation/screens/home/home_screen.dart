@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/memo_providers.dart';
+import '../../providers/anniversary_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -10,6 +11,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final memosAsync = ref.watch(memosProvider);
+    final upcomingAnniversaries = ref.watch(upcomingAnniversariesProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -104,9 +106,16 @@ class HomeScreen extends ConsumerWidget {
                   _FeatureCard(
                     icon: Icons.favorite_rounded,
                     title: '纪念日',
-                    subtitle: '重要日子',
+                    subtitle: upcomingAnniversaries.when(
+                      data: (anniversaries) {
+                        if (anniversaries.isEmpty) return '暂无近7天纪念日';
+                        return '${anniversaries.length} 个即将到来';
+                      },
+                      loading: () => '加载中...',
+                      error: (_, __) => '加载失败',
+                    ),
                     gradient: const [Color(0xFFF093FB), Color(0xFFF5576C)],
-                    onTap: () => context.go('/countdown'),
+                    onTap: () => context.go('/anniversary'),
                   ),
                   _FeatureCard(
                     icon: Icons.account_balance_wallet_rounded,

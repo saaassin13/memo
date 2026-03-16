@@ -10,15 +10,16 @@ import 'tables/countdowns.dart';
 import 'tables/accounts.dart';
 import 'tables/goals.dart';
 import 'tables/weights.dart';
+import 'tables/anniversaries.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Memos, Todos, Diaries, Countdowns, Accounts, Goals, Weights])
+@DriftDatabase(tables: [Memos, Todos, Diaries, Countdowns, Accounts, Goals, Weights, Anniversaries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -34,6 +35,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           // 添加 isPinned 字段
           await m.addColumn(todos, todos.isPinned);
+        }
+        if (from < 4) {
+          // 创建纪念日表
+          await m.createTable(anniversaries);
         }
       },
     );

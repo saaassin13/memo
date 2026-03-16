@@ -11,6 +11,7 @@ import '../presentation/screens/features/countdown/countdown_screen.dart';
 import '../presentation/screens/features/account/account_screen.dart';
 import '../presentation/screens/features/goal/goal_screen.dart';
 import '../presentation/screens/features/weight/weight_screen.dart';
+import '../presentation/screens/anniversary/anniversary_screen.dart';
 import '../presentation/widgets/main_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -61,6 +62,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/weight',
                 builder: (context, state) => const WeightScreen(),
+              ),
+              GoRoute(
+                path: '/anniversary',
+                builder: (context, state) => const AnniversaryScreen(),
               ),
             ],
           ),
