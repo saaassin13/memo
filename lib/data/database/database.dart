@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -44,6 +44,14 @@ class AppDatabase extends _$AppDatabase {
           // 添加日记 label 和 mood 字段
           await m.addColumn(diaries, diaries.label);
           await m.addColumn(diaries, diaries.mood);
+        }
+        if (from < 6) {
+          // 添加体重新字段
+          await m.addColumn(weights, weights.bodyFat);
+          await m.addColumn(weights, weights.exercised);
+          await m.addColumn(weights, weights.exerciseType);
+          await m.addColumn(weights, weights.exerciseDuration);
+          await m.addColumn(weights, weights.notes);
         }
       },
     );

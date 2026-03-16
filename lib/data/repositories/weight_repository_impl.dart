@@ -27,10 +27,25 @@ class WeightRepositoryImpl implements WeightRepository {
   }
 
   @override
+  Future<entity.Weight?> getByDate(DateTime date) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final row = await (_db.select(_db.weights)
+          ..where((t) => t.date.isBiggerOrEqualValue(startOfDay) & t.date.isSmallerThanValue(endOfDay)))
+        .getSingleOrNull();
+    return row != null ? _mapToEntity(row) : null;
+  }
+
+  @override
   Future<int> insert(entity.Weight weight) {
     return _db.into(_db.weights).insert(WeightsCompanion.insert(
           value: weight.value,
           date: weight.date,
+          bodyFat: Value(weight.bodyFat),
+          exercised: Value(weight.exercised),
+          exerciseType: Value(weight.exerciseType),
+          exerciseDuration: Value(weight.exerciseDuration),
+          notes: Value(weight.notes),
         ));
   }
 
@@ -40,6 +55,11 @@ class WeightRepositoryImpl implements WeightRepository {
           id: Value(weight.id!),
           value: Value(weight.value),
           date: Value(weight.date),
+          bodyFat: Value(weight.bodyFat),
+          exercised: Value(weight.exercised),
+          exerciseType: Value(weight.exerciseType),
+          exerciseDuration: Value(weight.exerciseDuration),
+          notes: Value(weight.notes),
         ));
   }
 
@@ -52,6 +72,11 @@ class WeightRepositoryImpl implements WeightRepository {
     return entity.Weight(
       id: row.id,
       value: row.value,
+      bodyFat: row.bodyFat,
+      exercised: row.exercised,
+      exerciseType: row.exerciseType,
+      exerciseDuration: row.exerciseDuration,
+      notes: row.notes,
       date: row.date,
       createdAt: row.createdAt,
     );

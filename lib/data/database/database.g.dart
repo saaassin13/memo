@@ -2948,6 +2948,66 @@ class $WeightsTable extends Weights with TableInfo<$WeightsTable, Weight> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _bodyFatMeta = const VerificationMeta(
+    'bodyFat',
+  );
+  @override
+  late final GeneratedColumn<double> bodyFat = GeneratedColumn<double>(
+    'body_fat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exercisedMeta = const VerificationMeta(
+    'exercised',
+  );
+  @override
+  late final GeneratedColumn<bool> exercised = GeneratedColumn<bool>(
+    'exercised',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("exercised" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _exerciseTypeMeta = const VerificationMeta(
+    'exerciseType',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseType = GeneratedColumn<String>(
+    'exercise_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _exerciseDurationMeta = const VerificationMeta(
+    'exerciseDuration',
+  );
+  @override
+  late final GeneratedColumn<int> exerciseDuration = GeneratedColumn<int>(
+    'exercise_duration',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
@@ -2970,7 +3030,17 @@ class $WeightsTable extends Weights with TableInfo<$WeightsTable, Weight> {
     defaultValue: currentDateAndTime,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, value, date, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    value,
+    bodyFat,
+    exercised,
+    exerciseType,
+    exerciseDuration,
+    notes,
+    date,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2993,6 +3063,42 @@ class $WeightsTable extends Weights with TableInfo<$WeightsTable, Weight> {
       );
     } else if (isInserting) {
       context.missing(_valueMeta);
+    }
+    if (data.containsKey('body_fat')) {
+      context.handle(
+        _bodyFatMeta,
+        bodyFat.isAcceptableOrUnknown(data['body_fat']!, _bodyFatMeta),
+      );
+    }
+    if (data.containsKey('exercised')) {
+      context.handle(
+        _exercisedMeta,
+        exercised.isAcceptableOrUnknown(data['exercised']!, _exercisedMeta),
+      );
+    }
+    if (data.containsKey('exercise_type')) {
+      context.handle(
+        _exerciseTypeMeta,
+        exerciseType.isAcceptableOrUnknown(
+          data['exercise_type']!,
+          _exerciseTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('exercise_duration')) {
+      context.handle(
+        _exerciseDurationMeta,
+        exerciseDuration.isAcceptableOrUnknown(
+          data['exercise_duration']!,
+          _exerciseDurationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
     }
     if (data.containsKey('date')) {
       context.handle(
@@ -3025,6 +3131,26 @@ class $WeightsTable extends Weights with TableInfo<$WeightsTable, Weight> {
         DriftSqlType.double,
         data['${effectivePrefix}value'],
       )!,
+      bodyFat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}body_fat'],
+      ),
+      exercised: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}exercised'],
+      )!,
+      exerciseType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exercise_type'],
+      )!,
+      exerciseDuration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}exercise_duration'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
       date: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}date'],
@@ -3045,11 +3171,21 @@ class $WeightsTable extends Weights with TableInfo<$WeightsTable, Weight> {
 class Weight extends DataClass implements Insertable<Weight> {
   final int id;
   final double value;
+  final double? bodyFat;
+  final bool exercised;
+  final String exerciseType;
+  final int exerciseDuration;
+  final String notes;
   final DateTime date;
   final DateTime createdAt;
   const Weight({
     required this.id,
     required this.value,
+    this.bodyFat,
+    required this.exercised,
+    required this.exerciseType,
+    required this.exerciseDuration,
+    required this.notes,
     required this.date,
     required this.createdAt,
   });
@@ -3058,6 +3194,13 @@ class Weight extends DataClass implements Insertable<Weight> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['value'] = Variable<double>(value);
+    if (!nullToAbsent || bodyFat != null) {
+      map['body_fat'] = Variable<double>(bodyFat);
+    }
+    map['exercised'] = Variable<bool>(exercised);
+    map['exercise_type'] = Variable<String>(exerciseType);
+    map['exercise_duration'] = Variable<int>(exerciseDuration);
+    map['notes'] = Variable<String>(notes);
     map['date'] = Variable<DateTime>(date);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -3067,6 +3210,13 @@ class Weight extends DataClass implements Insertable<Weight> {
     return WeightsCompanion(
       id: Value(id),
       value: Value(value),
+      bodyFat: bodyFat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bodyFat),
+      exercised: Value(exercised),
+      exerciseType: Value(exerciseType),
+      exerciseDuration: Value(exerciseDuration),
+      notes: Value(notes),
       date: Value(date),
       createdAt: Value(createdAt),
     );
@@ -3080,6 +3230,11 @@ class Weight extends DataClass implements Insertable<Weight> {
     return Weight(
       id: serializer.fromJson<int>(json['id']),
       value: serializer.fromJson<double>(json['value']),
+      bodyFat: serializer.fromJson<double?>(json['bodyFat']),
+      exercised: serializer.fromJson<bool>(json['exercised']),
+      exerciseType: serializer.fromJson<String>(json['exerciseType']),
+      exerciseDuration: serializer.fromJson<int>(json['exerciseDuration']),
+      notes: serializer.fromJson<String>(json['notes']),
       date: serializer.fromJson<DateTime>(json['date']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -3090,6 +3245,11 @@ class Weight extends DataClass implements Insertable<Weight> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'value': serializer.toJson<double>(value),
+      'bodyFat': serializer.toJson<double?>(bodyFat),
+      'exercised': serializer.toJson<bool>(exercised),
+      'exerciseType': serializer.toJson<String>(exerciseType),
+      'exerciseDuration': serializer.toJson<int>(exerciseDuration),
+      'notes': serializer.toJson<String>(notes),
       'date': serializer.toJson<DateTime>(date),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -3098,11 +3258,21 @@ class Weight extends DataClass implements Insertable<Weight> {
   Weight copyWith({
     int? id,
     double? value,
+    Value<double?> bodyFat = const Value.absent(),
+    bool? exercised,
+    String? exerciseType,
+    int? exerciseDuration,
+    String? notes,
     DateTime? date,
     DateTime? createdAt,
   }) => Weight(
     id: id ?? this.id,
     value: value ?? this.value,
+    bodyFat: bodyFat.present ? bodyFat.value : this.bodyFat,
+    exercised: exercised ?? this.exercised,
+    exerciseType: exerciseType ?? this.exerciseType,
+    exerciseDuration: exerciseDuration ?? this.exerciseDuration,
+    notes: notes ?? this.notes,
     date: date ?? this.date,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -3110,6 +3280,15 @@ class Weight extends DataClass implements Insertable<Weight> {
     return Weight(
       id: data.id.present ? data.id.value : this.id,
       value: data.value.present ? data.value.value : this.value,
+      bodyFat: data.bodyFat.present ? data.bodyFat.value : this.bodyFat,
+      exercised: data.exercised.present ? data.exercised.value : this.exercised,
+      exerciseType: data.exerciseType.present
+          ? data.exerciseType.value
+          : this.exerciseType,
+      exerciseDuration: data.exerciseDuration.present
+          ? data.exerciseDuration.value
+          : this.exerciseDuration,
+      notes: data.notes.present ? data.notes.value : this.notes,
       date: data.date.present ? data.date.value : this.date,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -3120,6 +3299,11 @@ class Weight extends DataClass implements Insertable<Weight> {
     return (StringBuffer('Weight(')
           ..write('id: $id, ')
           ..write('value: $value, ')
+          ..write('bodyFat: $bodyFat, ')
+          ..write('exercised: $exercised, ')
+          ..write('exerciseType: $exerciseType, ')
+          ..write('exerciseDuration: $exerciseDuration, ')
+          ..write('notes: $notes, ')
           ..write('date: $date, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3127,13 +3311,28 @@ class Weight extends DataClass implements Insertable<Weight> {
   }
 
   @override
-  int get hashCode => Object.hash(id, value, date, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    value,
+    bodyFat,
+    exercised,
+    exerciseType,
+    exerciseDuration,
+    notes,
+    date,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Weight &&
           other.id == this.id &&
           other.value == this.value &&
+          other.bodyFat == this.bodyFat &&
+          other.exercised == this.exercised &&
+          other.exerciseType == this.exerciseType &&
+          other.exerciseDuration == this.exerciseDuration &&
+          other.notes == this.notes &&
           other.date == this.date &&
           other.createdAt == this.createdAt);
 }
@@ -3141,17 +3340,32 @@ class Weight extends DataClass implements Insertable<Weight> {
 class WeightsCompanion extends UpdateCompanion<Weight> {
   final Value<int> id;
   final Value<double> value;
+  final Value<double?> bodyFat;
+  final Value<bool> exercised;
+  final Value<String> exerciseType;
+  final Value<int> exerciseDuration;
+  final Value<String> notes;
   final Value<DateTime> date;
   final Value<DateTime> createdAt;
   const WeightsCompanion({
     this.id = const Value.absent(),
     this.value = const Value.absent(),
+    this.bodyFat = const Value.absent(),
+    this.exercised = const Value.absent(),
+    this.exerciseType = const Value.absent(),
+    this.exerciseDuration = const Value.absent(),
+    this.notes = const Value.absent(),
     this.date = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   WeightsCompanion.insert({
     this.id = const Value.absent(),
     required double value,
+    this.bodyFat = const Value.absent(),
+    this.exercised = const Value.absent(),
+    this.exerciseType = const Value.absent(),
+    this.exerciseDuration = const Value.absent(),
+    this.notes = const Value.absent(),
     required DateTime date,
     this.createdAt = const Value.absent(),
   }) : value = Value(value),
@@ -3159,12 +3373,22 @@ class WeightsCompanion extends UpdateCompanion<Weight> {
   static Insertable<Weight> custom({
     Expression<int>? id,
     Expression<double>? value,
+    Expression<double>? bodyFat,
+    Expression<bool>? exercised,
+    Expression<String>? exerciseType,
+    Expression<int>? exerciseDuration,
+    Expression<String>? notes,
     Expression<DateTime>? date,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (value != null) 'value': value,
+      if (bodyFat != null) 'body_fat': bodyFat,
+      if (exercised != null) 'exercised': exercised,
+      if (exerciseType != null) 'exercise_type': exerciseType,
+      if (exerciseDuration != null) 'exercise_duration': exerciseDuration,
+      if (notes != null) 'notes': notes,
       if (date != null) 'date': date,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -3173,12 +3397,22 @@ class WeightsCompanion extends UpdateCompanion<Weight> {
   WeightsCompanion copyWith({
     Value<int>? id,
     Value<double>? value,
+    Value<double?>? bodyFat,
+    Value<bool>? exercised,
+    Value<String>? exerciseType,
+    Value<int>? exerciseDuration,
+    Value<String>? notes,
     Value<DateTime>? date,
     Value<DateTime>? createdAt,
   }) {
     return WeightsCompanion(
       id: id ?? this.id,
       value: value ?? this.value,
+      bodyFat: bodyFat ?? this.bodyFat,
+      exercised: exercised ?? this.exercised,
+      exerciseType: exerciseType ?? this.exerciseType,
+      exerciseDuration: exerciseDuration ?? this.exerciseDuration,
+      notes: notes ?? this.notes,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -3192,6 +3426,21 @@ class WeightsCompanion extends UpdateCompanion<Weight> {
     }
     if (value.present) {
       map['value'] = Variable<double>(value.value);
+    }
+    if (bodyFat.present) {
+      map['body_fat'] = Variable<double>(bodyFat.value);
+    }
+    if (exercised.present) {
+      map['exercised'] = Variable<bool>(exercised.value);
+    }
+    if (exerciseType.present) {
+      map['exercise_type'] = Variable<String>(exerciseType.value);
+    }
+    if (exerciseDuration.present) {
+      map['exercise_duration'] = Variable<int>(exerciseDuration.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
     }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
@@ -3207,6 +3456,11 @@ class WeightsCompanion extends UpdateCompanion<Weight> {
     return (StringBuffer('WeightsCompanion(')
           ..write('id: $id, ')
           ..write('value: $value, ')
+          ..write('bodyFat: $bodyFat, ')
+          ..write('exercised: $exercised, ')
+          ..write('exerciseType: $exerciseType, ')
+          ..write('exerciseDuration: $exerciseDuration, ')
+          ..write('notes: $notes, ')
           ..write('date: $date, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -5420,6 +5674,11 @@ typedef $$WeightsTableCreateCompanionBuilder =
     WeightsCompanion Function({
       Value<int> id,
       required double value,
+      Value<double?> bodyFat,
+      Value<bool> exercised,
+      Value<String> exerciseType,
+      Value<int> exerciseDuration,
+      Value<String> notes,
       required DateTime date,
       Value<DateTime> createdAt,
     });
@@ -5427,6 +5686,11 @@ typedef $$WeightsTableUpdateCompanionBuilder =
     WeightsCompanion Function({
       Value<int> id,
       Value<double> value,
+      Value<double?> bodyFat,
+      Value<bool> exercised,
+      Value<String> exerciseType,
+      Value<int> exerciseDuration,
+      Value<String> notes,
       Value<DateTime> date,
       Value<DateTime> createdAt,
     });
@@ -5447,6 +5711,31 @@ class $$WeightsTableFilterComposer
 
   ColumnFilters<double> get value => $composableBuilder(
     column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bodyFat => $composableBuilder(
+    column: $table.bodyFat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get exercised => $composableBuilder(
+    column: $table.exercised,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exerciseType => $composableBuilder(
+    column: $table.exerciseType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get exerciseDuration => $composableBuilder(
+    column: $table.exerciseDuration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5480,6 +5769,31 @@ class $$WeightsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get bodyFat => $composableBuilder(
+    column: $table.bodyFat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get exercised => $composableBuilder(
+    column: $table.exercised,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exerciseType => $composableBuilder(
+    column: $table.exerciseType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get exerciseDuration => $composableBuilder(
+    column: $table.exerciseDuration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get date => $composableBuilder(
     column: $table.date,
     builder: (column) => ColumnOrderings(column),
@@ -5505,6 +5819,25 @@ class $$WeightsTableAnnotationComposer
 
   GeneratedColumn<double> get value =>
       $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<double> get bodyFat =>
+      $composableBuilder(column: $table.bodyFat, builder: (column) => column);
+
+  GeneratedColumn<bool> get exercised =>
+      $composableBuilder(column: $table.exercised, builder: (column) => column);
+
+  GeneratedColumn<String> get exerciseType => $composableBuilder(
+    column: $table.exerciseType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get exerciseDuration => $composableBuilder(
+    column: $table.exerciseDuration,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
@@ -5543,11 +5876,21 @@ class $$WeightsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<double> value = const Value.absent(),
+                Value<double?> bodyFat = const Value.absent(),
+                Value<bool> exercised = const Value.absent(),
+                Value<String> exerciseType = const Value.absent(),
+                Value<int> exerciseDuration = const Value.absent(),
+                Value<String> notes = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => WeightsCompanion(
                 id: id,
                 value: value,
+                bodyFat: bodyFat,
+                exercised: exercised,
+                exerciseType: exerciseType,
+                exerciseDuration: exerciseDuration,
+                notes: notes,
                 date: date,
                 createdAt: createdAt,
               ),
@@ -5555,11 +5898,21 @@ class $$WeightsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required double value,
+                Value<double?> bodyFat = const Value.absent(),
+                Value<bool> exercised = const Value.absent(),
+                Value<String> exerciseType = const Value.absent(),
+                Value<int> exerciseDuration = const Value.absent(),
+                Value<String> notes = const Value.absent(),
                 required DateTime date,
                 Value<DateTime> createdAt = const Value.absent(),
               }) => WeightsCompanion.insert(
                 id: id,
                 value: value,
+                bodyFat: bodyFat,
+                exercised: exercised,
+                exerciseType: exerciseType,
+                exerciseDuration: exerciseDuration,
+                notes: notes,
                 date: date,
                 createdAt: createdAt,
               ),
