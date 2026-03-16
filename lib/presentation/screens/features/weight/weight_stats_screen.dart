@@ -6,15 +6,17 @@ import '../../../../domain/entities/weight.dart';
 class WeightStatsScreen extends ConsumerWidget {
   const WeightStatsScreen({super.key});
 
+  static const _primaryPurple = Color(0xFF8B5CF6);
+  static const _lightPurple = Color(0xFFF3F0FF);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(weightStatsPeriodProvider);
     final filteredAsync = ref.watch(filteredWeightsProvider);
     final statsAsync = ref.watch(weightStatsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -26,58 +28,68 @@ class WeightStatsScreen extends ConsumerWidget {
         title: const Text('统计分析', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 时间范围选择
-            Row(
-              children: StatsPeriod.values.map((p) {
-                final isSelected = period == p;
-                final label = p == StatsPeriod.week ? '周' : p == StatsPeriod.month ? '月' : '年';
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => ref.read(weightStatsPeriodProvider.notifier).state = p,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF8B5CF6) : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : Colors.grey.shade600,
+            // 时间范围 - 胶囊式分段控件
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Row(
+                children: StatsPeriod.values.map((p) {
+                  final isSelected = period == p;
+                  final label = p == StatsPeriod.week ? '周' : p == StatsPeriod.month ? '月' : '年';
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => ref.read(weightStatsPeriodProvider.notifier).state = p,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: isSelected
+                              ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 2))]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              color: isSelected ? _primaryPurple : Colors.grey.shade500,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
             const SizedBox(height: 24),
 
             // 体重趋势图
-            _buildSectionTitle('体重趋势'),
+            _buildSectionHeader('体重趋势', Icons.show_chart_rounded),
             const SizedBox(height: 12),
             filteredAsync.when(
-              data: (weights) => _buildTrendChart(weights, '体重', (w) => w.value, 'kg'),
-              loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+              data: (weights) => _buildTrendChart(weights),
+              loading: () => const SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
               error: (_, __) => const SizedBox.shrink(),
             ),
             const SizedBox(height: 24),
 
             // 关键指标
-            _buildSectionTitle('关键指标'),
+            _buildSectionHeader('关键指标', Icons.insights_rounded),
             const SizedBox(height: 12),
             statsAsync.when(
               data: (stats) => _buildStatsCards(stats),
-              loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+              loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
               error: (_, __) => const SizedBox.shrink(),
             ),
           ],
@@ -86,41 +98,71 @@ class WeightStatsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87));
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: _lightPurple,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 16, color: _primaryPurple),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+      ],
+    );
   }
 
-  Widget _buildTrendChart(List<Weight> weights, String label, double Function(Weight) getValue, String unit) {
+  Widget _buildTrendChart(List<Weight> weights) {
     if (weights.isEmpty) {
       return Container(
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
         ),
-        child: Center(child: Text('暂无数据', style: TextStyle(color: Colors.grey.shade400))),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.show_chart_rounded, size: 36, color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+              Text('暂无数据', style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+            ],
+          ),
+        ),
       );
     }
 
-    final values = weights.map(getValue).toList();
+    final values = weights.map((w) => w.value).toList();
     final minVal = values.reduce((a, b) => a < b ? a : b);
     final maxVal = values.reduce((a, b) => a > b ? a : b);
     final range = maxVal - minVal;
-    final padding = range > 0 ? range * 0.2 : 1.0;
+    final padding = range > 0 ? range * 0.25 : 1.0;
 
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
+      height: 220,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('体重',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+              Text('${minVal.toStringAsFixed(1)} ~ ${maxVal.toStringAsFixed(1)} kg',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+            ],
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: CustomPaint(
@@ -129,7 +171,7 @@ class WeightStatsScreen extends ConsumerWidget {
                 values: values,
                 minVal: minVal - padding,
                 maxVal: maxVal + padding,
-                color: const Color(0xFF8B5CF6),
+                color: _primaryPurple,
               ),
             ),
           ),
@@ -137,8 +179,8 @@ class WeightStatsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_formatDate(weights.first.date), style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-              Text(_formatDate(weights.last.date), style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+              Text(_formatDate(weights.first.date), style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+              Text(_formatDate(weights.last.date), style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
             ],
           ),
         ],
@@ -149,13 +191,22 @@ class WeightStatsScreen extends ConsumerWidget {
   Widget _buildStatsCards(WeightStats stats) {
     if (stats.isEmpty) {
       return Container(
-        height: 100,
+        height: 120,
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
         ),
-        child: Center(child: Text('暂无数据', style: TextStyle(color: Colors.grey.shade400))),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.insights_rounded, size: 36, color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+              Text('暂无数据', style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+            ],
+          ),
+        ),
       );
     }
 
@@ -165,46 +216,109 @@ class WeightStatsScreen extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.8,
+      childAspectRatio: 1.6,
       children: [
-        _buildStatCard('平均体重', '${stats.avgWeight.toStringAsFixed(1)} kg', '近${stats.days}天', const Color(0xFF8B5CF6)),
-        _buildStatCard('最低体重', '${stats.minWeight.toStringAsFixed(1)} kg', '', const Color(0xFF10B981)),
-        _buildStatCard('运动次数', '${stats.exerciseCount} 次', '近${stats.days}天', const Color(0xFFF59E0B)),
-        _buildStatCard(
-          '体重变化',
-          '${stats.weightChange >= 0 ? '+' : ''}${stats.weightChange.toStringAsFixed(1)} kg',
-          '近${stats.days}天',
-          stats.weightChange <= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        _StatCard(
+          icon: Icons.speed_rounded,
+          title: '平均体重',
+          value: '${stats.avgWeight.toStringAsFixed(1)}',
+          unit: 'kg',
+          subtitle: '近${stats.days}天',
+          color: _primaryPurple,
+        ),
+        _StatCard(
+          icon: Icons.arrow_downward_rounded,
+          title: '最低体重',
+          value: '${stats.minWeight.toStringAsFixed(1)}',
+          unit: 'kg',
+          subtitle: '',
+          color: const Color(0xFF34D399),
+        ),
+        _StatCard(
+          icon: Icons.fitness_center_rounded,
+          title: '运动次数',
+          value: '${stats.exerciseCount}',
+          unit: '次',
+          subtitle: '近${stats.days}天',
+          color: const Color(0xFFFBBF24),
+        ),
+        _StatCard(
+          icon: stats.weightChange <= 0 ? Icons.trending_down_rounded : Icons.trending_up_rounded,
+          title: '体重变化',
+          value: '${stats.weightChange >= 0 ? '+' : ''}${stats.weightChange.toStringAsFixed(1)}',
+          unit: 'kg',
+          subtitle: '近${stats.days}天',
+          color: stats.weightChange <= 0 ? const Color(0xFF34D399) : const Color(0xFFF87171),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, String subtitle, Color color) {
+  String _formatDate(DateTime date) => '${date.month}/${date.day}';
+}
+
+// 统计卡片组件
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final String unit;
+  final String subtitle;
+  final Color color;
+
+  const _StatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.025), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-          const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-          ],
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+            ],
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(value,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color, letterSpacing: -1, height: 1)),
+              const SizedBox(width: 3),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Text(unit,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade400, fontWeight: FontWeight.w500)),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
-
-  String _formatDate(DateTime date) => '${date.month}/${date.day}';
 }
 
 class _TrendLinePainter extends CustomPainter {
@@ -219,39 +333,67 @@ class _TrendLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (values.length < 2) return;
 
-    final paint = Paint()
+    final range = maxVal - minVal;
+    if (range <= 0) return;
+
+    // 渐变填充
+    final fillPath = Path();
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color.withOpacity(0.2), color.withOpacity(0.02)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    fillPath.moveTo(0, size.height);
+    for (int i = 0; i < values.length; i++) {
+      final x = i / (values.length - 1) * size.width;
+      final y = size.height - ((values[i] - minVal) / range * size.height);
+      if (i == 0) {
+        fillPath.lineTo(x, y);
+      } else {
+        fillPath.lineTo(x, y);
+      }
+    }
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+    canvas.drawPath(fillPath, fillPaint);
+
+    // 折线
+    final linePaint = Paint()
       ..color = color
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final dotPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final dotBorderPaint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
-    final range = maxVal - minVal;
-
     for (int i = 0; i < values.length; i++) {
       final x = i / (values.length - 1) * size.width;
-      final y = range > 0 ? size.height - ((values[i] - minVal) / range * size.height) : size.height / 2;
-
+      final y = size.height - ((values[i] - minVal) / range * size.height);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
         path.lineTo(x, y);
       }
+    }
+    canvas.drawPath(path, linePaint);
 
+    // 数据点
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final dotBorderPaint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < values.length; i++) {
+      final x = i / (values.length - 1) * size.width;
+      final y = size.height - ((values[i] - minVal) / range * size.height);
       canvas.drawCircle(Offset(x, y), 5, dotPaint);
       canvas.drawCircle(Offset(x, y), 5, dotBorderPaint);
     }
-
-    canvas.drawPath(path, paint);
   }
 
   @override
