@@ -100,16 +100,36 @@
 
 ---
 
-### Phase 4: 数据导出/导入 ⏳
+### Phase 4: 数据导出/导入 ✅
 
-- [ ] 数据导出功能 (标记为开发中)
-- [ ] 数据导入功能 (标记为开发中)
-- [ ] 清除缓存功能 (UI 完成，功能暂为提示)
+- [x] 创建 DataBackupService (JSON 序列化所有表)
+- [x] 实现 exportData() 导出为 JSON 文件
+- [x] 实现 importData() 从 JSON 文件导入
+- [x] 导出后通过 share_plus 分享文件
+- [x] 导入通过 file_picker 选择文件
+- [x] 导入确认对话框
+- [x] 导入/导出 loading 状态
 
-**说明:** 导出/导入功能 UI 和对话框已完成，实际功能标记为"开发中"，后续需要：
-1. 添加 JSON 序列化所有表的数据
-2. 使用 `path_provider` 获取存储路径
-3. 可选添加 `share_plus` 用于分享备份文件
+**文件清单:**
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `lib/data/services/data_backup_service.dart` | 已创建 | 数据备份服务 |
+
+**导出的数据表:**
+- memos (备忘录)
+- todos (待办)
+- diaries (日记)
+- anniversaries (纪念日)
+- goals (目标)
+- goalProgressLogs (目标进度记录)
+- weights (体重记录)
+- countdowns (倒计时)
+- accounts (记账)
+
+**依赖新增:**
+- `share_plus: ^10.0.0` - 文件分享
+- `file_picker: ^8.0.0` - 文件选择
 
 ---
 
@@ -120,13 +140,15 @@
 | `lib/presentation/providers/profile_providers.dart` | "我的"页面数据统计 | ✅ |
 | `lib/presentation/screens/profile/profile_screen.dart` | "我的"页面主体 | ✅ 已重写 |
 | `lib/presentation/screens/profile/settings_screen.dart` | 设置页面 | ✅ |
+| `lib/data/services/data_backup_service.dart` | 数据备份服务 | ✅ |
 | `notes/step18-profile-dev.md` | 本开发文档 | ✅ |
 
 ## 已修改文件列表
 
 | 文件 | 修改内容 | 状态 |
 |------|------|------|
-| `pubspec.yaml` | 新增 `shared_preferences` 依赖 | ✅ |
+| `pubspec.yaml` | 新增 `shared_preferences`、`share_plus`、`file_picker` 依赖 | ✅ |
+| `lib/presentation/providers/repository_providers.dart` | 新增 dataBackupServiceProvider | ✅ |
 
 ---
 

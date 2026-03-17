@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../../providers/profile_providers.dart';
 import '../../providers/weight_providers.dart';
 import '../../providers/goal_providers.dart';
+import '../../providers/repository_providers.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -60,7 +63,7 @@ class ProfileScreen extends ConsumerWidget {
               // 数据管理
               _buildSectionHeader('数据管理', Icons.storage_rounded),
               const SizedBox(height: 12),
-              _buildDataManagement(context),
+              _buildDataManagement(context, ref),
               const SizedBox(height: 20),
 
               // 设置
@@ -285,7 +288,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDataManagement(BuildContext context) {
+  Widget _buildDataManagement(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -302,7 +305,7 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: const Color(0xFF3B82F6),
             title: '数据导出',
             subtitle: '备份所有数据',
-            onTap: () => _showExportDialog(context),
+            onTap: () => _showExportDialog(context, ref),
           ),
           _divider(),
           _SettingsListItem(
@@ -311,7 +314,7 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: const Color(0xFF10B981),
             title: '数据导入',
             subtitle: '从备份恢复数据',
-            onTap: () => _showImportDialog(context),
+            onTap: () => _showImportDialog(context, ref),
           ),
           _divider(),
           _SettingsListItem(
@@ -381,11 +384,83 @@ class ProfileScreen extends ConsumerWidget {
     return Divider(height: 1, indent: 56, color: Colors.grey.shade100);
   }
 
-  void _showExportDialog(BuildContext context) {
+  void _showExportDialog(BuildContext context, WidgetRef ref) {
+    bool isExporting = false;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(Icons.upload_rounded, size: 40, color: _primaryPurple),
+              const SizedBox(height: 12),
+              const Text('数据导出', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Text(
+                '将所有数据导出为备份文件\n包含备忘录、待办、日记、纪念日、目标、体重等',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: _PillButton(
+                  label: isExporting ? '导出中...' : '开始导出',
+                  onTap: isExporting
+                      ? () {}
+                      : () async {
+                          setState(() => isExporting = true);
+                          try {
+                            final service = ref.read(dataBackupServiceProvider);
+                            final filePath = await service.exportData();
+                            Navigator.pop(ctx);
+                            if (context.mounted) {
+                              _showExportSuccessDialog(context, filePath);
+                            }
+                          } catch (e) {
+                            setState(() => isExporting = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('导出失败: $e')),
+                              );
+                            }
+                          }
+                        },
+                  filled: true,
+                  color: _primaryPurple,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showExportSuccessDialog(BuildContext context, String filePath) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         decoration: BoxDecoration(
@@ -404,34 +479,35 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Icon(Icons.upload_rounded, size: 40, color: _primaryPurple),
+            const Icon(Icons.check_circle_rounded, size: 40, color: Color(0xFF10B981)),
             const SizedBox(height: 12),
-            const Text('数据导出', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const Text('导出成功', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('将所有数据导出为备份文件\n(功能开发中)',
+            Text('备份文件已保存到:\n$filePath',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: _PillButton(
-                label: '知道了',
-                onTap: () => Navigator.pop(context),
+                label: '确定',
+                onTap: () => Navigator.pop(ctx),
                 filled: true,
                 color: _primaryPurple,
               ),
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
     );
   }
 
-  void _showImportDialog(BuildContext context) {
+  void _showImportDialog(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         decoration: BoxDecoration(
@@ -454,23 +530,101 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             const Text('数据导入', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('从备份文件恢复数据\n(功能开发中)',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: _PillButton(
-                label: '知道了',
-                onTap: () => Navigator.pop(context),
-                filled: true,
-                color: _primaryPurple,
-              ),
+            Text(
+              '从备份文件恢复数据\n导入将追加数据，不会覆盖现有记录',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _PillButton(
+                    label: '取消',
+                    onTap: () => Navigator.pop(ctx),
+                    filled: false,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _PillButton(
+                    label: '选择文件',
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await _pickAndImportFile(context, ref);
+                    },
+                    filled: true,
+                    color: const Color(0xFF10B981),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickAndImportFile(BuildContext context, WidgetRef ref) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final filePath = result.files.first.path;
+      if (filePath == null) return;
+
+      // 确认导入
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('确认导入'),
+          content: const Text('导入将追加数据到现有记录中，确定继续吗？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('确定', style: TextStyle(color: Color(0xFF10B981))),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+
+      // 显示加载
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final service = ref.read(dataBackupServiceProvider);
+      final importResult = await service.importData(filePath);
+
+      if (context.mounted) {
+        Navigator.pop(context); // 关闭加载
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导入成功！共 ${importResult.totalRecords} 条记录')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // 确保关闭加载
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导入失败: $e')),
+        );
+      }
+    }
   }
 
   void _showClearCacheDialog(BuildContext context) {

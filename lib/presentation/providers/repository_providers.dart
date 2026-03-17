@@ -8,6 +8,7 @@ import '../../data/repositories/account_repository_impl.dart';
 import '../../data/repositories/goal_repository_impl.dart';
 import '../../data/repositories/weight_repository_impl.dart';
 import '../../data/repositories/anniversary_repository_impl.dart';
+import '../../data/services/data_backup_service.dart';
 import '../../domain/repositories/memo_repository.dart';
 import '../../domain/repositories/todo_repository.dart';
 import '../../domain/repositories/diary_repository.dart';
@@ -20,6 +21,11 @@ import '../../domain/repositories/anniversary_repository.dart';
 // 数据库 Provider
 final databaseProvider = Provider<AppDatabase>((ref) {
   throw UnimplementedError('Database must be initialized in main.dart');
+});
+
+// 备份服务 Provider
+final dataBackupServiceProvider = Provider<DataBackupService>((ref) {
+  return DataBackupService(ref.watch(databaseProvider));
 });
 
 // Repository Providers
