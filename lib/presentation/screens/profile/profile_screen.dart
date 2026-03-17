@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/weight_providers.dart';
+import '../../providers/goal_providers.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -19,6 +20,8 @@ class ProfileScreen extends ConsumerWidget {
     final nextAnniversaryAsync = ref.watch(nextAnniversaryProvider);
     final memoCount = ref.watch(memoCountProvider);
     final diaryCount = ref.watch(diaryCountProvider);
+    final anniversaryCount = ref.watch(anniversaryCountProvider);
+    final goalStatsAsync = ref.watch(goalStatsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -51,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
               // 数据统计入口
               _buildSectionHeader('数据统计', Icons.bar_chart_rounded),
               const SizedBox(height: 12),
-              _buildStatsList(context, ref, latestWeightAsync, nextAnniversaryAsync, memoCount, diaryCount),
+              _buildStatsList(context, ref, latestWeightAsync, nextAnniversaryAsync, memoCount, diaryCount, anniversaryCount, goalStatsAsync),
               const SizedBox(height: 20),
 
               // 数据管理
@@ -192,11 +195,11 @@ class ProfileScreen extends ConsumerWidget {
           Container(width: 1, height: 40, color: Colors.grey.shade100),
           Expanded(
             child: _WeeklyStatItem(
-              icon: Icons.trending_down_rounded,
-              iconColor: stats.weightChange <= 0 ? const Color(0xFF10B981) : const Color(0xFFF87171),
-              label: '体重',
-              value: '${stats.weightChange >= 0 ? '+' : ''}${stats.weightChange.toStringAsFixed(1)}',
-              unit: 'kg',
+              icon: Icons.directions_run_rounded,
+              iconColor: const Color(0xFF10B981),
+              label: '运动',
+              value: '${stats.exerciseCount}',
+              unit: '天',
             ),
           ),
         ],
@@ -211,6 +214,8 @@ class ProfileScreen extends ConsumerWidget {
     AsyncValue<dynamic> nextAnniversaryAsync,
     int memoCount,
     int diaryCount,
+    int anniversaryCount,
+    AsyncValue<GoalStats> goalStatsAsync,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -228,7 +233,7 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: const Color(0xFFF59E0B),
             title: '备忘录',
             subtitle: '共 $memoCount 条',
-            onTap: () => context.go('/home'),
+            onTap: () => context.push('/memo'),
           ),
           _divider(),
           _StatsListItem(
@@ -237,7 +242,7 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: const Color(0xFF6366F1),
             title: '日记',
             subtitle: '共 $diaryCount 篇',
-            onTap: () => context.go('/home'),
+            onTap: () => context.push('/diary'),
           ),
           _divider(),
           _StatsListItem(
@@ -258,10 +263,10 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: const Color(0xFF10B981),
             title: '纪念日',
             subtitle: nextAnniversaryAsync.maybeWhen(
-              data: (a) => a != null ? '下次 ${a.daysUntil} 天后' : '暂无纪念日',
+              data: (a) => a != null ? '下次 ${a.daysUntil} 天后' : '共 $anniversaryCount 个',
               orElse: () => '暂无纪念日',
             ),
-            onTap: () => context.go('/home'),
+            onTap: () => context.push('/anniversary'),
           ),
           _divider(),
           _StatsListItem(
@@ -269,8 +274,11 @@ class ProfileScreen extends ConsumerWidget {
             iconBg: const Color(0xFFFEE2E2),
             iconColor: const Color(0xFFEF4444),
             title: '目标',
-            subtitle: '查看全部',
-            onTap: () => context.go('/home'),
+            subtitle: goalStatsAsync.maybeWhen(
+              data: (stats) => '进行中 ${stats.inProgress} 个',
+              orElse: () => '查看全部',
+            ),
+            onTap: () => context.push('/goal'),
           ),
         ],
       ),
