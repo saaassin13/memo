@@ -2497,6 +2497,28 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _progressTypeMeta = const VerificationMeta(
+    'progressType',
+  );
+  @override
+  late final GeneratedColumn<int> progressType = GeneratedColumn<int>(
+    'progress_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _totalStepsMeta = const VerificationMeta(
     'totalSteps',
   );
@@ -2560,6 +2582,8 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    notes,
+    progressType,
     totalSteps,
     completedSteps,
     deadline,
@@ -2588,6 +2612,21 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('progress_type')) {
+      context.handle(
+        _progressTypeMeta,
+        progressType.isAcceptableOrUnknown(
+          data['progress_type']!,
+          _progressTypeMeta,
+        ),
+      );
     }
     if (data.containsKey('total_steps')) {
       context.handle(
@@ -2639,6 +2678,14 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      progressType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}progress_type'],
+      )!,
       totalSteps: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}total_steps'],
@@ -2671,6 +2718,8 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
 class Goal extends DataClass implements Insertable<Goal> {
   final int id;
   final String name;
+  final String notes;
+  final int progressType;
   final int totalSteps;
   final int completedSteps;
   final DateTime? deadline;
@@ -2679,6 +2728,8 @@ class Goal extends DataClass implements Insertable<Goal> {
   const Goal({
     required this.id,
     required this.name,
+    required this.notes,
+    required this.progressType,
     required this.totalSteps,
     required this.completedSteps,
     this.deadline,
@@ -2690,6 +2741,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    map['notes'] = Variable<String>(notes);
+    map['progress_type'] = Variable<int>(progressType);
     map['total_steps'] = Variable<int>(totalSteps);
     map['completed_steps'] = Variable<int>(completedSteps);
     if (!nullToAbsent || deadline != null) {
@@ -2704,6 +2757,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     return GoalsCompanion(
       id: Value(id),
       name: Value(name),
+      notes: Value(notes),
+      progressType: Value(progressType),
       totalSteps: Value(totalSteps),
       completedSteps: Value(completedSteps),
       deadline: deadline == null && nullToAbsent
@@ -2722,6 +2777,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     return Goal(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      notes: serializer.fromJson<String>(json['notes']),
+      progressType: serializer.fromJson<int>(json['progressType']),
       totalSteps: serializer.fromJson<int>(json['totalSteps']),
       completedSteps: serializer.fromJson<int>(json['completedSteps']),
       deadline: serializer.fromJson<DateTime?>(json['deadline']),
@@ -2735,6 +2792,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'notes': serializer.toJson<String>(notes),
+      'progressType': serializer.toJson<int>(progressType),
       'totalSteps': serializer.toJson<int>(totalSteps),
       'completedSteps': serializer.toJson<int>(completedSteps),
       'deadline': serializer.toJson<DateTime?>(deadline),
@@ -2746,6 +2805,8 @@ class Goal extends DataClass implements Insertable<Goal> {
   Goal copyWith({
     int? id,
     String? name,
+    String? notes,
+    int? progressType,
     int? totalSteps,
     int? completedSteps,
     Value<DateTime?> deadline = const Value.absent(),
@@ -2754,6 +2815,8 @@ class Goal extends DataClass implements Insertable<Goal> {
   }) => Goal(
     id: id ?? this.id,
     name: name ?? this.name,
+    notes: notes ?? this.notes,
+    progressType: progressType ?? this.progressType,
     totalSteps: totalSteps ?? this.totalSteps,
     completedSteps: completedSteps ?? this.completedSteps,
     deadline: deadline.present ? deadline.value : this.deadline,
@@ -2764,6 +2827,10 @@ class Goal extends DataClass implements Insertable<Goal> {
     return Goal(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      progressType: data.progressType.present
+          ? data.progressType.value
+          : this.progressType,
       totalSteps: data.totalSteps.present
           ? data.totalSteps.value
           : this.totalSteps,
@@ -2781,6 +2848,8 @@ class Goal extends DataClass implements Insertable<Goal> {
     return (StringBuffer('Goal(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('notes: $notes, ')
+          ..write('progressType: $progressType, ')
           ..write('totalSteps: $totalSteps, ')
           ..write('completedSteps: $completedSteps, ')
           ..write('deadline: $deadline, ')
@@ -2794,6 +2863,8 @@ class Goal extends DataClass implements Insertable<Goal> {
   int get hashCode => Object.hash(
     id,
     name,
+    notes,
+    progressType,
     totalSteps,
     completedSteps,
     deadline,
@@ -2806,6 +2877,8 @@ class Goal extends DataClass implements Insertable<Goal> {
       (other is Goal &&
           other.id == this.id &&
           other.name == this.name &&
+          other.notes == this.notes &&
+          other.progressType == this.progressType &&
           other.totalSteps == this.totalSteps &&
           other.completedSteps == this.completedSteps &&
           other.deadline == this.deadline &&
@@ -2816,6 +2889,8 @@ class Goal extends DataClass implements Insertable<Goal> {
 class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String> notes;
+  final Value<int> progressType;
   final Value<int> totalSteps;
   final Value<int> completedSteps;
   final Value<DateTime?> deadline;
@@ -2824,6 +2899,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   const GoalsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.progressType = const Value.absent(),
     this.totalSteps = const Value.absent(),
     this.completedSteps = const Value.absent(),
     this.deadline = const Value.absent(),
@@ -2833,6 +2910,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   GoalsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.notes = const Value.absent(),
+    this.progressType = const Value.absent(),
     this.totalSteps = const Value.absent(),
     this.completedSteps = const Value.absent(),
     this.deadline = const Value.absent(),
@@ -2842,6 +2921,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   static Insertable<Goal> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? notes,
+    Expression<int>? progressType,
     Expression<int>? totalSteps,
     Expression<int>? completedSteps,
     Expression<DateTime>? deadline,
@@ -2851,6 +2932,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (notes != null) 'notes': notes,
+      if (progressType != null) 'progress_type': progressType,
       if (totalSteps != null) 'total_steps': totalSteps,
       if (completedSteps != null) 'completed_steps': completedSteps,
       if (deadline != null) 'deadline': deadline,
@@ -2862,6 +2945,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   GoalsCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String>? notes,
+    Value<int>? progressType,
     Value<int>? totalSteps,
     Value<int>? completedSteps,
     Value<DateTime?>? deadline,
@@ -2871,6 +2956,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     return GoalsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      notes: notes ?? this.notes,
+      progressType: progressType ?? this.progressType,
       totalSteps: totalSteps ?? this.totalSteps,
       completedSteps: completedSteps ?? this.completedSteps,
       deadline: deadline ?? this.deadline,
@@ -2887,6 +2974,12 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (progressType.present) {
+      map['progress_type'] = Variable<int>(progressType.value);
     }
     if (totalSteps.present) {
       map['total_steps'] = Variable<int>(totalSteps.value);
@@ -2911,6 +3004,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     return (StringBuffer('GoalsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('notes: $notes, ')
+          ..write('progressType: $progressType, ')
           ..write('totalSteps: $totalSteps, ')
           ..write('completedSteps: $completedSteps, ')
           ..write('deadline: $deadline, ')
@@ -4180,6 +4275,356 @@ class AnniversariesCompanion extends UpdateCompanion<Anniversary> {
   }
 }
 
+class $GoalProgressLogsTable extends GoalProgressLogs
+    with TableInfo<$GoalProgressLogsTable, GoalProgressLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GoalProgressLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _goalIdMeta = const VerificationMeta('goalId');
+  @override
+  late final GeneratedColumn<int> goalId = GeneratedColumn<int>(
+    'goal_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepBeforeMeta = const VerificationMeta(
+    'stepBefore',
+  );
+  @override
+  late final GeneratedColumn<int> stepBefore = GeneratedColumn<int>(
+    'step_before',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepAfterMeta = const VerificationMeta(
+    'stepAfter',
+  );
+  @override
+  late final GeneratedColumn<int> stepAfter = GeneratedColumn<int>(
+    'step_after',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    goalId,
+    stepBefore,
+    stepAfter,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'goal_progress_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GoalProgressLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('goal_id')) {
+      context.handle(
+        _goalIdMeta,
+        goalId.isAcceptableOrUnknown(data['goal_id']!, _goalIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_goalIdMeta);
+    }
+    if (data.containsKey('step_before')) {
+      context.handle(
+        _stepBeforeMeta,
+        stepBefore.isAcceptableOrUnknown(data['step_before']!, _stepBeforeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stepBeforeMeta);
+    }
+    if (data.containsKey('step_after')) {
+      context.handle(
+        _stepAfterMeta,
+        stepAfter.isAcceptableOrUnknown(data['step_after']!, _stepAfterMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stepAfterMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GoalProgressLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GoalProgressLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      goalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goal_id'],
+      )!,
+      stepBefore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}step_before'],
+      )!,
+      stepAfter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}step_after'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GoalProgressLogsTable createAlias(String alias) {
+    return $GoalProgressLogsTable(attachedDatabase, alias);
+  }
+}
+
+class GoalProgressLog extends DataClass implements Insertable<GoalProgressLog> {
+  final int id;
+  final int goalId;
+  final int stepBefore;
+  final int stepAfter;
+  final DateTime createdAt;
+  const GoalProgressLog({
+    required this.id,
+    required this.goalId,
+    required this.stepBefore,
+    required this.stepAfter,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['goal_id'] = Variable<int>(goalId);
+    map['step_before'] = Variable<int>(stepBefore);
+    map['step_after'] = Variable<int>(stepAfter);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  GoalProgressLogsCompanion toCompanion(bool nullToAbsent) {
+    return GoalProgressLogsCompanion(
+      id: Value(id),
+      goalId: Value(goalId),
+      stepBefore: Value(stepBefore),
+      stepAfter: Value(stepAfter),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory GoalProgressLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GoalProgressLog(
+      id: serializer.fromJson<int>(json['id']),
+      goalId: serializer.fromJson<int>(json['goalId']),
+      stepBefore: serializer.fromJson<int>(json['stepBefore']),
+      stepAfter: serializer.fromJson<int>(json['stepAfter']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'goalId': serializer.toJson<int>(goalId),
+      'stepBefore': serializer.toJson<int>(stepBefore),
+      'stepAfter': serializer.toJson<int>(stepAfter),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  GoalProgressLog copyWith({
+    int? id,
+    int? goalId,
+    int? stepBefore,
+    int? stepAfter,
+    DateTime? createdAt,
+  }) => GoalProgressLog(
+    id: id ?? this.id,
+    goalId: goalId ?? this.goalId,
+    stepBefore: stepBefore ?? this.stepBefore,
+    stepAfter: stepAfter ?? this.stepAfter,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  GoalProgressLog copyWithCompanion(GoalProgressLogsCompanion data) {
+    return GoalProgressLog(
+      id: data.id.present ? data.id.value : this.id,
+      goalId: data.goalId.present ? data.goalId.value : this.goalId,
+      stepBefore: data.stepBefore.present
+          ? data.stepBefore.value
+          : this.stepBefore,
+      stepAfter: data.stepAfter.present ? data.stepAfter.value : this.stepAfter,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalProgressLog(')
+          ..write('id: $id, ')
+          ..write('goalId: $goalId, ')
+          ..write('stepBefore: $stepBefore, ')
+          ..write('stepAfter: $stepAfter, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, goalId, stepBefore, stepAfter, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GoalProgressLog &&
+          other.id == this.id &&
+          other.goalId == this.goalId &&
+          other.stepBefore == this.stepBefore &&
+          other.stepAfter == this.stepAfter &&
+          other.createdAt == this.createdAt);
+}
+
+class GoalProgressLogsCompanion extends UpdateCompanion<GoalProgressLog> {
+  final Value<int> id;
+  final Value<int> goalId;
+  final Value<int> stepBefore;
+  final Value<int> stepAfter;
+  final Value<DateTime> createdAt;
+  const GoalProgressLogsCompanion({
+    this.id = const Value.absent(),
+    this.goalId = const Value.absent(),
+    this.stepBefore = const Value.absent(),
+    this.stepAfter = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  GoalProgressLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int goalId,
+    required int stepBefore,
+    required int stepAfter,
+    this.createdAt = const Value.absent(),
+  }) : goalId = Value(goalId),
+       stepBefore = Value(stepBefore),
+       stepAfter = Value(stepAfter);
+  static Insertable<GoalProgressLog> custom({
+    Expression<int>? id,
+    Expression<int>? goalId,
+    Expression<int>? stepBefore,
+    Expression<int>? stepAfter,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (goalId != null) 'goal_id': goalId,
+      if (stepBefore != null) 'step_before': stepBefore,
+      if (stepAfter != null) 'step_after': stepAfter,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  GoalProgressLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? goalId,
+    Value<int>? stepBefore,
+    Value<int>? stepAfter,
+    Value<DateTime>? createdAt,
+  }) {
+    return GoalProgressLogsCompanion(
+      id: id ?? this.id,
+      goalId: goalId ?? this.goalId,
+      stepBefore: stepBefore ?? this.stepBefore,
+      stepAfter: stepAfter ?? this.stepAfter,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (goalId.present) {
+      map['goal_id'] = Variable<int>(goalId.value);
+    }
+    if (stepBefore.present) {
+      map['step_before'] = Variable<int>(stepBefore.value);
+    }
+    if (stepAfter.present) {
+      map['step_after'] = Variable<int>(stepAfter.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalProgressLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('goalId: $goalId, ')
+          ..write('stepBefore: $stepBefore, ')
+          ..write('stepAfter: $stepAfter, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4191,6 +4636,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GoalsTable goals = $GoalsTable(this);
   late final $WeightsTable weights = $WeightsTable(this);
   late final $AnniversariesTable anniversaries = $AnniversariesTable(this);
+  late final $GoalProgressLogsTable goalProgressLogs = $GoalProgressLogsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4204,6 +4652,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     goals,
     weights,
     anniversaries,
+    goalProgressLogs,
   ];
 }
 
@@ -5445,6 +5894,8 @@ typedef $$GoalsTableCreateCompanionBuilder =
     GoalsCompanion Function({
       Value<int> id,
       required String name,
+      Value<String> notes,
+      Value<int> progressType,
       Value<int> totalSteps,
       Value<int> completedSteps,
       Value<DateTime?> deadline,
@@ -5455,6 +5906,8 @@ typedef $$GoalsTableUpdateCompanionBuilder =
     GoalsCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String> notes,
+      Value<int> progressType,
       Value<int> totalSteps,
       Value<int> completedSteps,
       Value<DateTime?> deadline,
@@ -5477,6 +5930,16 @@ class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get progressType => $composableBuilder(
+    column: $table.progressType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5525,6 +5988,16 @@ class $$GoalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get progressType => $composableBuilder(
+    column: $table.progressType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get totalSteps => $composableBuilder(
     column: $table.totalSteps,
     builder: (column) => ColumnOrderings(column),
@@ -5565,6 +6038,14 @@ class $$GoalsTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get progressType => $composableBuilder(
+    column: $table.progressType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get totalSteps => $composableBuilder(
     column: $table.totalSteps,
@@ -5616,6 +6097,8 @@ class $$GoalsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<int> progressType = const Value.absent(),
                 Value<int> totalSteps = const Value.absent(),
                 Value<int> completedSteps = const Value.absent(),
                 Value<DateTime?> deadline = const Value.absent(),
@@ -5624,6 +6107,8 @@ class $$GoalsTableTableManager
               }) => GoalsCompanion(
                 id: id,
                 name: name,
+                notes: notes,
+                progressType: progressType,
                 totalSteps: totalSteps,
                 completedSteps: completedSteps,
                 deadline: deadline,
@@ -5634,6 +6119,8 @@ class $$GoalsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String> notes = const Value.absent(),
+                Value<int> progressType = const Value.absent(),
                 Value<int> totalSteps = const Value.absent(),
                 Value<int> completedSteps = const Value.absent(),
                 Value<DateTime?> deadline = const Value.absent(),
@@ -5642,6 +6129,8 @@ class $$GoalsTableTableManager
               }) => GoalsCompanion.insert(
                 id: id,
                 name: name,
+                notes: notes,
+                progressType: progressType,
                 totalSteps: totalSteps,
                 completedSteps: completedSteps,
                 deadline: deadline,
@@ -6275,6 +6764,208 @@ typedef $$AnniversariesTableProcessedTableManager =
       Anniversary,
       PrefetchHooks Function()
     >;
+typedef $$GoalProgressLogsTableCreateCompanionBuilder =
+    GoalProgressLogsCompanion Function({
+      Value<int> id,
+      required int goalId,
+      required int stepBefore,
+      required int stepAfter,
+      Value<DateTime> createdAt,
+    });
+typedef $$GoalProgressLogsTableUpdateCompanionBuilder =
+    GoalProgressLogsCompanion Function({
+      Value<int> id,
+      Value<int> goalId,
+      Value<int> stepBefore,
+      Value<int> stepAfter,
+      Value<DateTime> createdAt,
+    });
+
+class $$GoalProgressLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $GoalProgressLogsTable> {
+  $$GoalProgressLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goalId => $composableBuilder(
+    column: $table.goalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepBefore => $composableBuilder(
+    column: $table.stepBefore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepAfter => $composableBuilder(
+    column: $table.stepAfter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GoalProgressLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GoalProgressLogsTable> {
+  $$GoalProgressLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goalId => $composableBuilder(
+    column: $table.goalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepBefore => $composableBuilder(
+    column: $table.stepBefore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepAfter => $composableBuilder(
+    column: $table.stepAfter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GoalProgressLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GoalProgressLogsTable> {
+  $$GoalProgressLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get goalId =>
+      $composableBuilder(column: $table.goalId, builder: (column) => column);
+
+  GeneratedColumn<int> get stepBefore => $composableBuilder(
+    column: $table.stepBefore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepAfter =>
+      $composableBuilder(column: $table.stepAfter, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$GoalProgressLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GoalProgressLogsTable,
+          GoalProgressLog,
+          $$GoalProgressLogsTableFilterComposer,
+          $$GoalProgressLogsTableOrderingComposer,
+          $$GoalProgressLogsTableAnnotationComposer,
+          $$GoalProgressLogsTableCreateCompanionBuilder,
+          $$GoalProgressLogsTableUpdateCompanionBuilder,
+          (
+            GoalProgressLog,
+            BaseReferences<
+              _$AppDatabase,
+              $GoalProgressLogsTable,
+              GoalProgressLog
+            >,
+          ),
+          GoalProgressLog,
+          PrefetchHooks Function()
+        > {
+  $$GoalProgressLogsTableTableManager(
+    _$AppDatabase db,
+    $GoalProgressLogsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GoalProgressLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GoalProgressLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GoalProgressLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> goalId = const Value.absent(),
+                Value<int> stepBefore = const Value.absent(),
+                Value<int> stepAfter = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => GoalProgressLogsCompanion(
+                id: id,
+                goalId: goalId,
+                stepBefore: stepBefore,
+                stepAfter: stepAfter,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int goalId,
+                required int stepBefore,
+                required int stepAfter,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => GoalProgressLogsCompanion.insert(
+                id: id,
+                goalId: goalId,
+                stepBefore: stepBefore,
+                stepAfter: stepAfter,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GoalProgressLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GoalProgressLogsTable,
+      GoalProgressLog,
+      $$GoalProgressLogsTableFilterComposer,
+      $$GoalProgressLogsTableOrderingComposer,
+      $$GoalProgressLogsTableAnnotationComposer,
+      $$GoalProgressLogsTableCreateCompanionBuilder,
+      $$GoalProgressLogsTableUpdateCompanionBuilder,
+      (
+        GoalProgressLog,
+        BaseReferences<_$AppDatabase, $GoalProgressLogsTable, GoalProgressLog>,
+      ),
+      GoalProgressLog,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6295,4 +6986,6 @@ class $AppDatabaseManager {
       $$WeightsTableTableManager(_db, _db.weights);
   $$AnniversariesTableTableManager get anniversaries =>
       $$AnniversariesTableTableManager(_db, _db.anniversaries);
+  $$GoalProgressLogsTableTableManager get goalProgressLogs =>
+      $$GoalProgressLogsTableTableManager(_db, _db.goalProgressLogs);
 }

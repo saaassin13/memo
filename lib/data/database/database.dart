@@ -11,15 +11,16 @@ import 'tables/accounts.dart';
 import 'tables/goals.dart';
 import 'tables/weights.dart';
 import 'tables/anniversaries.dart';
+import 'tables/goal_progress_logs.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Memos, Todos, Diaries, Countdowns, Accounts, Goals, Weights, Anniversaries])
+@DriftDatabase(tables: [Memos, Todos, Diaries, Countdowns, Accounts, Goals, Weights, Anniversaries, GoalProgressLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -52,6 +53,18 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(weights, weights.exerciseType);
           await m.addColumn(weights, weights.exerciseDuration);
           await m.addColumn(weights, weights.notes);
+        }
+        if (from < 7) {
+          // 创建目标进度记录表
+          await m.createTable(goalProgressLogs);
+        }
+        if (from < 8) {
+          // 添加目标进度类型字段
+          await m.addColumn(goals, goals.progressType);
+        }
+        if (from < 9) {
+          // 添加目标备注字段
+          await m.addColumn(goals, goals.notes);
         }
       },
     );
