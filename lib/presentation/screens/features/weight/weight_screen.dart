@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/weight_providers.dart';
@@ -14,8 +15,9 @@ class WeightScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todayAsync = ref.watch(todayWeightProvider);
-    final weightsAsync = ref.watch(weightsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
+    final monthGroupsAsync = ref.watch(weightMonthGroupsProvider);
+    final selectedYear = ref.watch(selectedYearProvider);
+    final availableYearsAsync = ref.watch(availableYearsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -86,15 +88,28 @@ class WeightScreen extends ConsumerWidget {
               child: todayAsync.when(
                 data: (today) => _buildTodayCard(context, today),
                 loading: () => const SizedBox(height: 180, child: Center(child: CircularProgressIndicator())),
-                error: (_, __) => _buildTodayCard(context, null),
+                error: (_, _) => _buildTodayCard(context, null),
               ),
             ),
-            // 历史记录标题
+            // 历史记录标题 + 年份选择
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
               child: Row(
                 children: [
                   const Text('历史记录', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 12),
+                  // 年份选择器
+                  availableYearsAsync.when(
+                    data: (years) => _YearSelector(
+                      years: years,
+                      selectedYear: selectedYear,
+                      onChanged: (year) {
+                        ref.read(selectedYearProvider.notifier).state = year;
+                      },
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () {
@@ -119,22 +134,14 @@ class WeightScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            // 历史列表
+            // 分组列表
             Expanded(
-              child: weightsAsync.when(
-                data: (weights) {
-                  if (weights.isEmpty) {
+              child: monthGroupsAsync.when(
+                data: (groups) {
+                  if (groups.isEmpty) {
                     return _buildEmptyState(context);
                   }
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: weights.length,
-                    itemBuilder: (context, index) {
-                      final w = weights[index];
-                      final prev = index < weights.length - 1 ? weights[index + 1] : null;
-                      return _buildHistoryItem(context, ref, w, prev, index);
-                    },
-                  );
+                  return _GroupedWeightList(groups: groups);
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('加载失败: $e')),
@@ -221,7 +228,6 @@ class WeightScreen extends ConsumerWidget {
       ),
       child: Stack(
         children: [
-          // 装饰圆点
           Positioned(
             top: -10,
             right: -10,
@@ -311,8 +317,309 @@ class WeightScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildHistoryItem(BuildContext context, WidgetRef ref, Weight w, Weight? prev, int index) {
+// 年份选择器
+class _YearSelector extends StatelessWidget {
+  final List<int> years;
+  final int selectedYear;
+  final ValueChanged<int> onChanged;
+
+  const _YearSelector({
+    required this.years,
+    required this.selectedYear,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showYearPicker(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F0FF),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${selectedYear}年',
+              style: const TextStyle(
+                color: Color(0xFF8B5CF6),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 2),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF8B5CF6)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showYearPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('选择年份', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+              ...years.map((year) {
+                final isSelected = year == selectedYear;
+                return ListTile(
+                  title: Text(
+                    '${year}年',
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? const Color(0xFF8B5CF6) : Colors.black87,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_rounded, color: Color(0xFF8B5CF6))
+                      : null,
+                  onTap: () {
+                    onChanged(year);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// 分组列表组件
+class _GroupedWeightList extends ConsumerStatefulWidget {
+  final List<MonthGroup> groups;
+
+  const _GroupedWeightList({required this.groups});
+
+  @override
+  ConsumerState<_GroupedWeightList> createState() => _GroupedWeightListState();
+}
+
+class _GroupedWeightListState extends ConsumerState<_GroupedWeightList> {
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _monthKeys = {};
+  String? _currentMonthKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final keys = _monthKeys.entries.toList();
+    String? newCurrentMonth;
+    for (var i = keys.length - 1; i >= 0; i--) {
+      final key = keys[i].value;
+      final ctx = key.currentContext;
+      if (ctx != null) {
+        final box = ctx.findRenderObject() as RenderBox?;
+        if (box != null) {
+          final pos = box.localToGlobal(Offset.zero);
+          if (pos.dy < 200) {
+            newCurrentMonth = keys[i].key;
+            break;
+          }
+        }
+      }
+    }
+    if (newCurrentMonth != null && newCurrentMonth != _currentMonthKey) {
+      setState(() => _currentMonthKey = newCurrentMonth);
+    }
+  }
+
+  void _scrollToMonth(String monthKey) {
+    final key = _monthKeys[monthKey];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.0,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final expandedMonths = ref.watch(expandedMonthsProvider);
+
+    return Stack(
+      children: [
+        ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.only(left: 20, right: 48, bottom: 20),
+          itemCount: widget.groups.length,
+          itemBuilder: (context, index) {
+            final group = widget.groups[index];
+            final monthKey = group.monthKey;
+            _monthKeys.putIfAbsent(monthKey, () => GlobalKey());
+
+            return Container(
+              key: _monthKeys[monthKey],
+              margin: const EdgeInsets.only(bottom: 8),
+              child: _MonthGroupTile(
+                group: group,
+                isExpanded: expandedMonths.contains(monthKey),
+                onToggle: () {
+                  final notifier = ref.read(expandedMonthsProvider.notifier);
+                  final current = Set<String>.from(notifier.state);
+                  if (current.contains(monthKey)) {
+                    current.remove(monthKey);
+                  } else {
+                    current.add(monthKey);
+                  }
+                  notifier.state = current;
+                },
+              ),
+            );
+          },
+        ),
+        // 右侧月份快速导航
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 36,
+          child: _MonthQuickNav(
+            groups: widget.groups,
+            currentMonthKey: _currentMonthKey,
+            onTap: _scrollToMonth,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// 月份分组卡片
+class _MonthGroupTile extends StatelessWidget {
+  final MonthGroup group;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
+  const _MonthGroupTile({
+    required this.group,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final monthStr = '${group.month.month}月';
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: onToggle,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  turns: isExpanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: isExpanded ? const Color(0xFF8B5CF6) : Colors.grey.shade400,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  monthStr,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${group.records.length}条',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
+                const Spacer(),
+                Text(
+                  '${group.avgWeight.toStringAsFixed(1)}kg',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF34D399).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '运动${group.exerciseCount}天',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF059669), fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Column(
+              children: List.generate(group.records.length, (index) {
+                final w = group.records[index];
+                final prev = index < group.records.length - 1 ? group.records[index + 1] : null;
+                return _buildRecordItem(context, w, prev);
+              }),
+            ),
+          ),
+          crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecordItem(BuildContext context, Weight w, Weight? prev) {
     double? diff;
     if (prev != null) {
       diff = w.value - prev.value;
@@ -323,69 +630,62 @@ class WeightScreen extends ConsumerWidget {
         Navigator.push(context, MaterialPageRoute(builder: (_) => WeightEditScreen(weight: w, date: w.date)));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.025), blurRadius: 10, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 1)),
           ],
         ),
         child: Row(
           children: [
-            // 日期彩色条
             Container(
-              width: 4,
-              height: 36,
+              width: 3,
+              height: 32,
               decoration: BoxDecoration(
                 color: _getDayColor(w.date.weekday),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${w.date.month}月${w.date.day}日',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
-                const SizedBox(height: 3),
+                Text(
+                  '${w.date.month}月${w.date.day}日',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   '${w.value.toStringAsFixed(1)} kg${w.bodyFat != null ? ' · ${w.bodyFat!.toStringAsFixed(1)}%' : ''}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
             const Spacer(),
             if (diff != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (diff <= 0 ? const Color(0xFF34D399) : const Color(0xFFF87171)).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  color: (diff <= 0 ? const Color(0xFF34D399) : const Color(0xFFF87171)).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: diff <= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626),
                   ),
                 ),
               ),
-            const SizedBox(width: 10),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: w.exercised ? const Color(0xFF34D399).withOpacity(0.12) : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                w.exercised ? Icons.directions_run_rounded : Icons.horizontal_rule_rounded,
-                size: 16,
-                color: w.exercised ? const Color(0xFF059669) : Colors.grey.shade300,
-              ),
+            const SizedBox(width: 8),
+            Icon(
+              w.exercised ? Icons.directions_run_rounded : null,
+              size: 14,
+              color: const Color(0xFF059669),
             ),
           ],
         ),
@@ -393,17 +693,77 @@ class WeightScreen extends ConsumerWidget {
     );
   }
 
-  Color _getDayColor(int weekday) {
+  static Color _getDayColor(int weekday) {
     const colors = [
-      Color(0xFF8B5CF6), // 周一 紫
-      Color(0xFF3B82F6), // 周二 蓝
-      Color(0xFF10B981), // 周三 绿
-      Color(0xFFF59E0B), // 周四 琥珀
-      Color(0xFFEF4444), // 周五 红
-      Color(0xFFEC4899), // 周六 粉
-      Color(0xFF6366F1), // 周日 靛蓝
+      Color(0xFF8B5CF6),
+      Color(0xFF3B82F6),
+      Color(0xFF10B981),
+      Color(0xFFF59E0B),
+      Color(0xFFEF4444),
+      Color(0xFFEC4899),
+      Color(0xFF6366F1),
     ];
     return colors[weekday - 1];
+  }
+}
+
+// 右侧月份快速导航
+class _MonthQuickNav extends StatelessWidget {
+  final List<MonthGroup> groups;
+  final String? currentMonthKey;
+  final ValueChanged<String> onTap;
+
+  const _MonthQuickNav({
+    required this.groups,
+    required this.currentMonthKey,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFFAFAFA).withOpacity(0),
+            const Color(0xFFFAFAFA).withOpacity(0.9),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: groups.length,
+        itemBuilder: (context, index) {
+          final group = groups[index];
+          final monthKey = group.monthKey;
+          final isActive = currentMonthKey == monthKey;
+          final label = '${group.month.month}月';
+
+          return GestureDetector(
+            onTap: () => onTap(monthKey),
+            child: Container(
+              height: 28,
+              margin: const EdgeInsets.symmetric(vertical: 1),
+              decoration: BoxDecoration(
+                color: isActive ? const Color(0xFF8B5CF6) : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  color: isActive ? Colors.white : Colors.grey.shade500,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

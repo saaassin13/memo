@@ -138,5 +138,196 @@
 
 ---
 
+## Phase 6: 历史记录列表优化 (待开发)
+
+### 问题分析
+
+当前历史记录使用简单的 `ListView.builder` 平铺展示所有记录，当记录数量较多时存在以下问题：
+- 难以快速定位到特定月份
+- 缺少时间维度的视觉分隔
+- 长列表滚动体验差
+
+### 优化方案：月份分组 + 快速导航
+
+#### 页面布局
+
+```
+┌─────────────────────────────────────┐
+│ [←]  体重                      [📊] │
+├─────────────────────────────────────┤
+│ ┌─────────────────────────────────┐ │
+│ │      今日概览卡片               │ │
+│ └─────────────────────────────────┘ │
+├─────────────────────────────────────┤
+│ 历史记录                    [统计]  │
+├─────────────────────────────────────┤
+│ ▼ 2026年3月                (12条)  │  ← 可折叠月份标题
+│ ┌─────────────────────────────────┐ │
+│ │ 3月16日  65.5kg  18.5%  ✅运动  │ │
+│ │ 3月15日  65.8kg  18.8%  ❌      │ │
+│ │ ...                            │ │
+│ └─────────────────────────────────┘ │
+│ ▼ 2026年2月                (15条)  │  ← 可折叠月份标题
+│ ┌─────────────────────────────────┐ │
+│ │ 2月28日  66.0kg  19.0%  ✅运动  │ │
+│ │ 2月27日  66.2kg  19.1%  ❌      │ │
+│ │ ...                            │ │
+│ └─────────────────────────────────┘ │
+│ ▶ 2026年1月                 (8条)  │  ← 已折叠
+│ ▶ 2025年12月               (20条)  │
+└─────────────────────────────────────┘
+```
+
+#### 核心功能
+
+**1. 月份分组 (MonthGroup)**
+
+```dart
+class MonthGroup {
+  final DateTime month;           // 2026-03-01
+  final List<Weight> records;     // 该月所有记录
+  final double avgWeight;         // 月平均体重
+  final int exerciseCount;        // 运动天数
+
+  MonthGroup({required this.month, required this.records});
+}
+```
+
+**2. 月份分组标题 (MonthHeader)**
+
+```
+┌─────────────────────────────────────────┐
+│ ▼ 2026年3月           65.8kg  运动8天   │  ← 展开状态
+├─────────────────────────────────────────┤
+│                                         │
+│ ▶ 2026年2月           66.2kg  运动10天  │  ← 折叠状态
+└─────────────────────────────────────────┘
+```
+
+- 显示月份、平均体重、运动天数
+- 点击折叠/展开该月记录
+- 默认展开当月，折叠其他月份
+- 展开时带动画过渡
+
+**3. 快速月份导航 (MonthQuickNav)**
+
+在列表右侧显示月份索引，支持快速跳转：
+
+```
+                        ┌─────┐
+                        │ 3月 │
+                        ├─────┤
+                        │ 2月 │
+                        ├─────┤
+                        │ 1月 │
+                        ├─────┤
+                        │ 12月│
+                        ├─────┤
+                        │ 11月│
+                        └─────┘
+```
+
+- 右侧固定月份索引条
+- 点击对应月份快速滚动到该分组
+- 当前可见月份高亮显示
+- 月份较多时支持滑动选择
+
+**4. 滚动时吸顶效果 (StickyHeader)**
+
+滚动时当前月份分组标题吸顶显示，直到下一个分组顶上来。
+
+#### 数据处理
+
+```dart
+// 按月份分组 Provider
+final weightMonthGroupsProvider = Provider<AsyncValue<List<MonthGroup>>>((ref) {
+  final weightsAsync = ref.watch(weightsProvider);
+  return weightsAsync.whenData((weights) {
+    if (weights.isEmpty) return [];
+
+    final Map<String, List<Weight>> grouped = {};
+    for (final w in weights) {
+      final key = '${w.date.year}-${w.date.month.toString().padLeft(2, '0')}';
+      grouped.putIfAbsent(key, () => []).add(w);
+    }
+
+    return grouped.entries.map((entry) {
+      return MonthGroup(
+        month: DateTime.parse('${entry.key}-01'),
+        records: entry.value,
+      );
+    }).toList()
+      ..sort((a, b) => b.month.compareTo(a.month)); // 月份倒序
+  });
+});
+```
+
+#### 交互细节
+
+| 操作 | 效果 |
+|------|------|
+| 点击月份标题 | 折叠/展开该月记录 (带动画) |
+| 点击月份索引 | 平滑滚动到对应分组 |
+| 点击记录 | 进入编辑页面 (现有逻辑) |
+| 上滑加载 | 记录全部加载，无需分页 |
+| 下拉刷新 | 刷新数据 (现有逻辑) |
+
+#### 折叠状态管理
+
+```dart
+// 当前展开的月份集合 (默认展开当月)
+final expandedMonthsProvider = StateProvider<Set<String>>((ref) {
+  final now = DateTime.now();
+  return {'${now.year}-${now.month.toString().padLeft(2, '0')}'};
+});
+```
+
+#### 视觉设计
+
+| 元素 | 样式 |
+|------|------|
+| 月份标题背景 | 浅灰 `#F5F5F5`，圆角 12px |
+| 展开图标 | `▼` 紫色 `#8B5CF6` |
+| 折叠图标 | `▶` 灰色 `#9CA3AF` |
+| 月份索引条 | 右侧固定，半透明背景 |
+| 月份索引项 | 选中时紫色底色白色文字 |
+| 分割线 | 浅灰虚线 `#E5E7EB` |
+
+#### 记录数阈值优化
+
+```dart
+// 记录数超过阈值时自动启用月份分组
+const kMonthGroupThreshold = 14; // 超过14条(约2周)启用分组
+
+// Provider 中自动判断
+final shouldGroupByMonthProvider = Provider<bool>((ref) {
+  final weightsAsync = ref.watch(weightsProvider);
+  final count = weightsAsync.valueOrNull?.length ?? 0;
+  return count > kMonthGroupThreshold;
+});
+```
+
+- 记录较少时保持现有平铺展示
+- 记录超过阈值自动切换为月份分组
+- 避免少量记录时分组标题占用过多空间
+
+---
+
+## 待办清单
+
+### Phase 6: 历史记录列表优化
+- [x] 创建 MonthGroup 数据类
+- [x] 实现 weightMonthGroupsProvider (按年份+月份分组)
+- [x] 实现 selectedYearProvider (年份选择)
+- [x] 实现 availableYearsProvider (可用年份列表)
+- [x] 实现 MonthHeader 组件 (可折叠月份标题 + 月度统计)
+- [x] 实现 expandedMonthsProvider (折叠状态管理)
+- [x] 实现 MonthQuickNav 组件 (右侧月份快速导航)
+- [x] 重写历史列表 (分组展示 + 年份选择器)
+- [x] 实现折叠展开动画
+- [x] 实现月份索引点击跳转
+
+---
+
 *文档创建日期: 2026年3月16日*
-*最后更新: 2026年3月16日*
+*最后更新: 2026年3月17日*
