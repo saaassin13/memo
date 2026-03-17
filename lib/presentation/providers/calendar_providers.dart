@@ -32,7 +32,6 @@ final eventTypeFilterProvider = StateProvider<Set<CalendarEventType>>((ref) => {
   CalendarEventType.todo,
   CalendarEventType.anniversary,
   CalendarEventType.goal,
-  CalendarEventType.weight,
 });
 
 // 待办事件 Provider - 按日期筛选

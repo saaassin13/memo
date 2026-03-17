@@ -255,16 +255,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   // TODO: 跳转到纪念日编辑
                 },
               ),
-              _AddOption(
-                icon: Icons.monitor_weight_rounded,
-                color: const Color(0xFF8B5CF6),
-                title: '体重',
-                subtitle: '记录今日体重',
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: 弹出体重记录
-                },
-              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -484,70 +474,79 @@ class _MonthView extends ConsumerWidget {
         ),
         // 选中日期的事件列表
         if (filter.isNotEmpty)
-          Expanded(
-            child: selectedDayEvents.when(
-              data: (events) {
-                if (events.isEmpty) {
-                  return Center(
-                    child: Text(
-                      '这一天没有安排',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: events.length,
-                  itemBuilder: (context, index) {
-                    final event = events[index];
-                    final color = eventTypeColors[event.type] ?? Colors.grey;
-                    return GestureDetector(
-                      onTap: () => _handleEventTap(context, event),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(_getEventIconStatic(event.type), size: 16, color: color),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                event.title,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (event.subtitle != null)
-                              Text(
-                                event.subtitle!,
-                                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-          ),
+          _buildDayEvents(context, selectedDayEvents),
       ],
+    );
+  }
+
+  Widget _buildDayEvents(BuildContext context, AsyncValue<List<CalendarEvent>> selectedDayEvents) {
+    return SizedBox(
+      height: 120,
+      child: selectedDayEvents.when(
+        data: (events) {
+          if (events.isEmpty) {
+            return Center(
+              child: Text(
+                '这一天没有安排',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              ),
+            );
+          }
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              final event = events[index];
+              final color = eventTypeColors[event.type] ?? Colors.grey;
+              return GestureDetector(
+                onTap: () => _handleEventTap(context, event),
+                child: Container(
+                  width: 140,
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(_getEventIconStatic(event.type), size: 14, color: color),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              event.title,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (event.subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          event.subtitle!,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const SizedBox.shrink(),
+      ),
     );
   }
 
@@ -1512,21 +1511,6 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                     _selected.add(CalendarEventType.goal);
                   } else {
                     _selected.remove(CalendarEventType.goal);
-                  }
-                });
-              },
-            ),
-            _FilterOption(
-              icon: Icons.monitor_weight_rounded,
-              color: const Color(0xFF8B5CF6),
-              title: '体重',
-              isSelected: _selected.contains(CalendarEventType.weight),
-              onChanged: (selected) {
-                setState(() {
-                  if (selected) {
-                    _selected.add(CalendarEventType.weight);
-                  } else {
-                    _selected.remove(CalendarEventType.weight);
                   }
                 });
               },
