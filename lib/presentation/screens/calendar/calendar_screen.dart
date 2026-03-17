@@ -5,6 +5,12 @@ import '../../providers/calendar_providers.dart';
 import '../../providers/todo_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../../domain/entities/todo.dart';
+import '../../../domain/entities/memo.dart';
+import '../../../domain/entities/anniversary.dart';
+import '../../../domain/entities/weight.dart';
+import '../../widgets/todo/todo_edit_dialog.dart';
+import '../anniversary/anniversary_edit_screen.dart';
+import '../features/weight/weight_edit_screen.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -495,40 +501,43 @@ class _MonthView extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final event = events[index];
                     final color = eventTypeColors[event.type] ?? Colors.grey;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                    return GestureDetector(
+                      onTap: () => _handleEventTap(context, event),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(_getEventIconStatic(event.type), size: 16, color: color),
                             ),
-                            child: Icon(_getEventIconStatic(event.type), size: 16, color: color),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              event.title,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                event.title,
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          if (event.subtitle != null)
-                            Text(
-                              event.subtitle!,
-                              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                            ),
-                        ],
+                            if (event.subtitle != null)
+                              Text(
+                                event.subtitle!,
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -554,6 +563,48 @@ class _MonthView extends ConsumerWidget {
         return Icons.flag_rounded;
       case CalendarEventType.weight:
         return Icons.monitor_weight_rounded;
+    }
+  }
+
+  static void _handleEventTap(BuildContext context, CalendarEvent event) {
+    switch (event.type) {
+      case CalendarEventType.todo:
+        final todo = event.data as Todo?;
+        if (todo != null && todo.id != null) {
+          showTodoEditDialog(context, todo: todo);
+        }
+        break;
+      case CalendarEventType.memo:
+        final memo = event.data as Memo?;
+        if (memo != null && memo.id != null) {
+          context.push('/memo/edit?id=${memo.id}');
+        }
+        break;
+      case CalendarEventType.anniversary:
+        final anniversary = event.data as Anniversary?;
+        if (anniversary != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AnniversaryEditScreen(anniversary: anniversary),
+            ),
+          );
+        }
+        break;
+      case CalendarEventType.goal:
+        context.push('/goal');
+        break;
+      case CalendarEventType.weight:
+        final weight = event.data as Weight?;
+        if (weight != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => WeightEditScreen(weight: weight),
+            ),
+          );
+        }
+        break;
     }
   }
 
@@ -1041,13 +1092,55 @@ class _DayEvents extends ConsumerWidget {
 }
 
 // 日历事件卡片
-class _CalendarEventCard extends StatelessWidget {
+class _CalendarEventCard extends ConsumerWidget {
   final CalendarEvent event;
 
   const _CalendarEventCard({required this.event});
 
+  void _onTap(BuildContext context, WidgetRef ref) {
+    switch (event.type) {
+      case CalendarEventType.todo:
+        final todo = event.data as Todo?;
+        if (todo != null && todo.id != null) {
+          showTodoEditDialog(context, todo: todo);
+        }
+        break;
+      case CalendarEventType.memo:
+        final memo = event.data as Memo?;
+        if (memo != null && memo.id != null) {
+          context.push('/memo/edit?id=${memo.id}');
+        }
+        break;
+      case CalendarEventType.anniversary:
+        final anniversary = event.data as Anniversary?;
+        if (anniversary != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AnniversaryEditScreen(anniversary: anniversary),
+            ),
+          );
+        }
+        break;
+      case CalendarEventType.goal:
+        context.push('/goal');
+        break;
+      case CalendarEventType.weight:
+        final weight = event.data as Weight?;
+        if (weight != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => WeightEditScreen(weight: weight),
+            ),
+          );
+        }
+        break;
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = eventTypeColors[event.type] ?? const Color(0xFF6B7280);
 
     IconData getEventIcon() {
@@ -1097,12 +1190,7 @@ class _CalendarEventCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // 根据事件类型跳转
-            if (event.type == CalendarEventType.todo && event.data is Todo) {
-              // 跳转到待办编辑
-            }
-          },
+          onTap: () => _onTap(context, ref),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
